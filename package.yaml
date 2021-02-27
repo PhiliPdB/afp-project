@@ -1,10 +1,10 @@
 name:                afp-project
 version:             0.1.0.0
-github:              "githubuser/afp-project"
+github:              "PhiliPdB/afp-project"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+author:              "Philip de Bruin, Jakub Młynek, Daniel van Vliet"
+maintainer:          "p.debruin@students.uu.nl"
+copyright:           "2021 Philip de Bruin, Jakub Młynek, Daniel van Vliet"
 
 extra-source-files:
 - README.md
@@ -17,10 +17,13 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/afp-project#readme>
+description:         Please see the README on GitHub at <https://github.com/PhiliPdB/afp-project#readme>
 
 dependencies:
 - base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
 
 library:
   source-dirs: src

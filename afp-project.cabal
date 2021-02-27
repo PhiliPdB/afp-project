@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2f66fe74d0cbdde6b07ae81b2ffad9ef1149ff058518e1c6c13527422dd239b4
+-- hash: cbe27b42369bb5d9ed49636a59cbf054fd2ceed0b2f3459b7559f6b9ef10e822
 
 name:           afp-project
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/afp-project#readme>
-homepage:       https://github.com/githubuser/afp-project#readme
-bug-reports:    https://github.com/githubuser/afp-project/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2021 Author name here
+description:    Please see the README on GitHub at <https://github.com/PhiliPdB/afp-project#readme>
+homepage:       https://github.com/PhiliPdB/afp-project#readme
+bug-reports:    https://github.com/PhiliPdB/afp-project/issues
+author:         Philip de Bruin, Jakub Młynek, Daniel van Vliet
+maintainer:     p.debruin@students.uu.nl
+copyright:      2021 Philip de Bruin, Jakub Młynek, Daniel van Vliet
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/afp-project
+  location: https://github.com/PhiliPdB/afp-project
 
 library
   exposed-modules:
@@ -32,6 +32,7 @@ library
       Paths_afp_project
   hs-source-dirs:
       src
+  ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
   default-language: Haskell2010
@@ -42,7 +43,7 @@ executable afp-project-exe
       Paths_afp_project
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       afp-project
     , base >=4.7 && <5
@@ -55,7 +56,7 @@ test-suite afp-project-test
       Paths_afp_project
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       afp-project
     , base >=4.7 && <5
