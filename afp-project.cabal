@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cbe27b42369bb5d9ed49636a59cbf054fd2ceed0b2f3459b7559f6b9ef10e822
+-- hash: 61251c85d6f4fe0577f46d93140a80a5310d3c94fed0c2bf09d937b9f6b99e49
 
 name:           afp-project
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
   ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
+    , vector
   default-language: Haskell2010
 
 executable afp-project-exe
