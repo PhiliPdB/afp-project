@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 61251c85d6f4fe0577f46d93140a80a5310d3c94fed0c2bf09d937b9f6b99e49
+-- hash: 61ca1cae3aed9b92be755267fd695b5fc26e33b6e83b46b69915889955ca2417
 
 name:           afp-project
 version:        0.1.0.0
@@ -27,6 +27,11 @@ source-repository head
 
 library
   exposed-modules:
+      Data.Column
+      Data.Formula
+      Data.SpreadSheet
+      Data.Type
+      DataTest
       Lib
   other-modules:
       Paths_afp_project

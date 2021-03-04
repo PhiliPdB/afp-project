@@ -1,8 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module Lib
-  ( someFunc
-  )
-where
+module Lib where
 
 import           Prelude                 hiding ( zipWith )
 import           Data.Vector                    ( Vector(..)
@@ -115,5 +112,4 @@ class SSType a where
   inferType :: Type a
 
 -- data Formula a = Var String (Type a)
-
 
