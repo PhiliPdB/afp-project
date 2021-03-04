@@ -27,6 +27,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+    - vector
 
 executables:
   afp-project-exe:
