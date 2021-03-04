@@ -3,7 +3,7 @@ module Data.Formula where
 
 import Data.Type (Type, CT)
 
-
+-- | Formula language used for making calculations
 data Formula a where
     Var        :: String -> Type a -> Formula a
     -- | Literal of one of the supported column types

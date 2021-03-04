@@ -5,16 +5,16 @@ import Data.Column (SpreadSheetCols(..), Column (..), getCol)
 import Data.Formula (Formula(..))
 
 -- | SpreadSheet is defined as list of columns 'indexed' on a column name
-newtype SpreadSheet = SpreadSheet [(String, SpreadSheetCols)]
+data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCols)]
 
 -- | Evaluate a given formula on a given spreadsheet
 evalF :: Formula a -> SpreadSheet -> [a]
-evalF (Var x t) s@(SpreadSheet cs) = case lookup x cs of
+evalF (Var x t) s@(SpreadSheet _ cs) = case lookup x cs of
     Just c -> case getCol c t of
         CData v -> v
         CForm f -> evalF f s
     Nothing -> error $ "No column with name '" ++ x ++ "'"
-evalF (Lit a)    _ = repeat a
+evalF (Lit a)    (SpreadSheet n _) = replicate n a
 -- Equality
 evalF (Eq a b)   s = zipWith (==) (evalF a s) (evalF b s)
 -- Arithmetic

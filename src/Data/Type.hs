@@ -8,7 +8,7 @@ data Type a where
     TBool   :: Type Bool
     TString :: Type String
 
-
+-- | Common column-type functions
 class CT a where
     inferType :: Type a
 
