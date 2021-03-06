@@ -4,7 +4,7 @@ module Data.SpreadSheet where
 import Data.Column (SpreadSheetCol(..), Column (..), getCol)
 import Data.Formula (Formula(..))
 
--- | SpreadSheet is defined as list of columns "indexed" on a column name
+-- | SpreadSheet is defined as list of columns /indexed/ on a column name
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
 
 -- | Evaluate a given formula on a given spreadsheet

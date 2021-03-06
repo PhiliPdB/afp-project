@@ -21,11 +21,11 @@ toCSVString s@(SpreadSheet n _) = unlines $ intercalate "," headers : toCSVStrin
           columns = map snd evaluatedSpreadSheet
 
           -- | Convert the columns into an array of CSV-row-lines
-          -- This is done by keeping track of the current row (with a variable `i`)
-          -- and appending rows till `i` reaches the size of the spreadsheet.
+          --   This is done by keeping track of the current row (with a variable `i`)
+          --   and appending rows till `i` reaches the size of the spreadsheet.
           --
-          -- TODO: With the current implementation for columns, this takes $O(n^2)$ time,
-          --       while $O(n)$ should be possible if indexing is $O(1)$.
+          -- TODO: With the current implementation for columns, this takes \(O(n^2)\) time,
+          --       while \(O(n)\) should be possible if indexing is \(O(1)\).
           toCSVString' :: Int -> [SpreadSheetCol] -> [String]
           toCSVString' i cs | i < n     = intercalate "," (map (showColItem i) cs) : toCSVString' (i + 1) cs
                             | otherwise = []
