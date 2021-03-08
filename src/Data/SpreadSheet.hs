@@ -5,6 +5,7 @@ import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddFie
 import Data.Formula (Formula(..))
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
+-- TODO: Don't export the constructor
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
 
 -- | Evaluate a given formula on a given spreadsheet
