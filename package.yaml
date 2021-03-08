@@ -51,3 +51,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - afp-project
+    - tasty >= 1.2.3
+    - tasty-quickcheck >= 0.10.1.2
