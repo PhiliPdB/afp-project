@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
-import Data.Column (SpreadSheetCol(..), Column (..), getCol)
+import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField)
 import Data.Formula (Formula(..))
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
@@ -56,3 +56,15 @@ evalSpreadSheet :: SpreadSheet -> [(String, SpreadSheetCol)]
 evalSpreadSheet s@(SpreadSheet _ cs) = map eval cs
     where -- TODO: This could possibly lead to evaluating formulas twice
           eval (n, col) = (n, tryEvalSpreadSheetCol col s)
+
+
+{-
+Functions for spreadsheet updating
+-}
+
+-- | Try to add a row of data to the spreadsheet
+tryAddRow :: SpreadSheet -> [ColField] -> SpreadSheet
+tryAddRow (SpreadSheet n cs) row | length cs == length row = SpreadSheet (n + 1) $ zipWith tryAddItem cs row
+                                 | otherwise               = error "Unmatched length" -- TODO: Error in returning datatype?
+    where tryAddItem :: (String, SpreadSheetCol) -> ColField -> (String, SpreadSheetCol)
+          tryAddItem (s, c) f = (s, tryAddField c f)
