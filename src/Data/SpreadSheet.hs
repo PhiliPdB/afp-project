@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
-import Data.Column (SpreadSheetCols(..), Column (..), getCol)
+import Data.Column (SpreadSheetCol(..), Column (..), getCol)
 import Data.Formula (Formula(..))
 
--- | SpreadSheet is defined as list of columns 'indexed' on a column name
-data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCols)]
+-- | SpreadSheet is defined as list of columns /indexed/ on a column name
+data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
 
 -- | Evaluate a given formula on a given spreadsheet
 evalF :: Formula a -> SpreadSheet -> [a]
@@ -35,3 +35,24 @@ evalF (IfThenElse c a b) s = map f (zip3 c' a' b')
 
           f (True,  x, _) = x
           f (False, _, y) = y
+
+-- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
+--   Otherwise, just the data is returned. This function thus always
+--   returns a `CData` column.
+-- TODO: Remove code duplication if possible
+tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetCol
+tryEvalSpreadSheetCol (CInt c)    s = case c of
+    CData d -> CInt    $ CData d
+    CForm f -> CInt    $ CData $ evalF f s
+tryEvalSpreadSheetCol (CBool c)   s = case c of
+    CData d -> CBool   $ CData d
+    CForm f -> CBool   $ CData $ evalF f s
+tryEvalSpreadSheetCol (CString c) s = case c of
+    CData d -> CString $ CData d
+    CForm f -> CString $ CData $ evalF f s
+
+-- | Evaluate a whole spreadsheet and get the columns with only data
+evalSpreadSheet :: SpreadSheet -> [(String, SpreadSheetCol)]
+evalSpreadSheet s@(SpreadSheet _ cs) = map eval cs
+    where -- TODO: This could possibly lead to evaluating formulas twice
+          eval (n, col) = (n, tryEvalSpreadSheetCol col s)
