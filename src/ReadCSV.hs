@@ -1,11 +1,15 @@
-module ReadCSV where
+module ReadCSV(
+ importCSV,
+ inferDataType
+) where
 
 import Data.SpreadSheet
 import Data.Column
-import Data.List.Split (split, oneOf)
+import Data.List.Split (split, oneOf, dropDelims)
 import Data.List       (transpose)
 import Text.Read       (readMaybe)
-import Data.Maybe      (isJust)
+import Data.Maybe      (isJust, fromJust)
+
 
 -- | Takes a rawColumn in string form, checks what type they should be and
 --   replies with a SpreadSheetCols containing the correct type and the list
@@ -18,23 +22,48 @@ inferDataType tColumn | isJust intCol  = CInt    $ CData $ fromJust intCol
             intCol  = sequenceA (map readMaybe tColumn :: [Maybe Int])
             boolCol = sequenceA (map readMaybe tColumn :: [Maybe Bool])
 
+
 -- | Creates the spreadsheet based on the size of the rawData with default column 
 --   names and data in them based on the function inferDataType.
-createSpSh :: [[String]] -> SpreadSheet -- TODO: add posibility to take column names from csv
-createSpSh rows = SpreadSheet sheetSize finalData
-        where
+--   Additionally it filters out the empty columns in the csv.
+createSpSh :: [[String]] -> Bool -> SpreadSheet
+createSpSh rows True  = SpreadSheet sheetSize finalData
+        where 
+            sheetSize = length $ tail rows
+            names     = head rows
+            transRows = filter (not . all null) $ transpose $ tail rows
+            finalData = zip names $ map inferDataType transRows
+createSpSh rows False = SpreadSheet sheetSize finalData
+        where 
             sheetSize = length rows
-            names     = ["col" ++ show x | x <- [1..sheetSize]]
-            transRows = transpose rows
-            finalData = [(colName, colData) | colName <- names, colData <- map inferDataType transRows]
+            transRows = filter (not . all null) $ transpose rows
+            names     = ["col" ++ show x | x <- [1..(length transRows)]]
+            finalData = zip names $ map inferDataType transRows
 
 
--- | Takes the path to the file, the separator that is should look for, and replies with the
---   spreadsheet wrapen in the IO monad. 
-importCSV :: FilePath -> Char -> IO SpreadSheet --TODO: Add a boolean to inform if the column names should be taken
-                                                --from the csv or to be default col<n>
-importCSV fPath sep = do
+-- | Takes the path to the file, the separator that is should look for, boolean information
+--   if it should take the first row as column names and replies with the spreadsheet wraped
+--   in the IO monad.
+importCSV :: FilePath -> Char -> Bool -> IO SpreadSheet
+importCSV fPath sep takeNames= do
                         contents <- readFile fPath
-                        let rawData = split (oneOf [sep]) <$> lines contents
-                        return $ createSpSh rawData
+                        let rawData = split (dropDelims $ oneOf [sep]) <$> lines contents
+                        return $ createSpSh rawData takeNames
 
+
+-- TODO: There is one glitch connected to having the , sign as value in a column.
+--       In this case it is writen as "," in the csv, but importCSV will read it
+--       as two " signs separetad with , . Maybe playing around with oneOf can fix the problem.
+
+-- temporary testing tools
+getColVal []                         = []
+getColVal ((_,CInt    (CData x)):xs) = show x :getColVal xs
+getColVal ((_,CBool   (CData x)):xs) = show x :getColVal xs
+getColVal ((_,CString (CData x)):xs) = show x :getColVal xs
+
+getColNames []         = []
+getColNames ((x,_):xs) = x:getColNames xs
+
+getInnerList (SpreadSheet _ l) = l
+
+getSpShSize (SpreadSheet n _) = n 
