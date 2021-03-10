@@ -29,6 +29,7 @@ library:
   source-dirs: src
   dependencies:
     - vector
+    - ordered-containers
 
 executables:
   afp-project-exe:
@@ -53,3 +54,4 @@ tests:
     - afp-project
     - tasty >= 1.2.3
     - tasty-quickcheck >= 0.10.1.2
+    - ordered-containers

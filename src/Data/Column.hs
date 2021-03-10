@@ -11,16 +11,22 @@ data Column a where
     -- | Column containing a formula
     CForm :: Formula a -> Column a
 
+instance (Show a) => Show (Column a) where
+    show (CData xs) = "CData " ++ show xs
+    -- TODO: add show for CForm
+
 -- | Supported SpreadSheet columns
 data SpreadSheetCol = CInt    (Column Int)
                     | CBool   (Column Bool)
                     | CString (Column String)
+    deriving Show
 
 -- | Sum type for the possible column fields
 data ColField = FInt Int
               | FBool Bool
               | FString String
               | FForm           -- ^ Empty field for formula column
+    deriving Show
 
 
 -- | Get the `Column` out of `SpreadSheetCol` based on the requested type
