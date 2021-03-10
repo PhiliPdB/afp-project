@@ -6,6 +6,10 @@ import Data.Type (Type, CT)
 -- | Formula language used for making calculations
 data Formula a where
     Var        :: String -> Type a -> Formula a
+    -- | Cross table column
+    CTVar      :: String -- ^ Name of the table
+               -> String -- ^ Name of the column
+               -> Type a -> Formula a
     -- | Literal of one of the supported column types
     Lit        :: CT a => a -> Formula a
     -- | Equality

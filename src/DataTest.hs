@@ -6,7 +6,7 @@ import Data.Formula
 import Data.Type
 import Data.SpreadSheet
 import Data.Column
-
+import qualified Data.Map as M
 
 testFormula :: Formula Int
 testFormula = Prod (Var "col1" inferType) (Var "col2" inferType)
@@ -25,3 +25,11 @@ testSpreadSheet = SpreadSheet 4
     , ("col3", CInt  $ CForm testFormula)
     , ("col4", CBool $ CData [True, False, True, False])
     ]
+
+testCrossSpreadSheet :: SpreadSheet
+testCrossSpreadSheet = SpreadSheet 4
+    [ ("col1", CInt $ CForm $ CTVar "main" "col2" inferType)
+    ]
+
+testEnv :: SpreadSheetEnv
+testEnv = M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
