@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
-import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField)
+import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
 import Data.Formula (Formula(..))
 
 import Data.Map.Ordered as OM
@@ -72,3 +72,10 @@ tryAddRow (SpreadSheet n cs) row | length cs == length row = SpreadSheet (n + 1)
                                  | otherwise               = error "Unmatched length" -- TODO: Error in returning datatype?
     where tryAddItem :: (String, SpreadSheetCol) -> ColField -> (String, SpreadSheetCol)
           tryAddItem (s, c) f = (s, tryAddField c f)
+
+-- | Remove a row of data from the spreadsheet
+removeRow :: SpreadSheet -> Int -> SpreadSheet
+removeRow (SpreadSheet n cs) i 
+        | i < 0     = error "i >= 0"
+        | otherwise = SpreadSheet (n - 1) (fmap (`Data.Column.removeRow` i) cs)
+

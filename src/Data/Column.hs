@@ -53,3 +53,18 @@ tryAddField c@(CBool   (CForm _)) FForm = c
 tryAddField c@(CString (CForm _)) FForm = c
 -- TODO: Error in resulting datatype?
 tryAddField _                    _           = error "Couldn't match column datatype with field datatype"
+
+
+removeIth :: [a] -> Int -> [a]
+removeIth []     _ = []
+removeIth (x:xs) i 
+    | i < 0      = xs
+    | otherwise  = removeIth xs (i - 1)
+
+removeRow :: SpreadSheetCol -> Int -> SpreadSheetCol
+removeRow _ i | i < 0 = error "i >= 0"
+removeRow (CInt     (CData xs)) i = CInt    $ CData $ removeIth xs i
+removeRow (CBool    (CData xs)) i = CBool   $ CData $ removeIth xs i
+removeRow (CString  (CData xs)) i = CString $ CData $ removeIth xs i
+-- Formula based columns cannot remove a row.
+removeRow s _ = s

@@ -40,9 +40,16 @@ instance Arbitrary ColField where
 
 -- adding a row increases row length variable
 p1 :: SpreadSheet -> Property
-p1 s@(SpreadSheet n cs) = (nCols > 1) ==> forAll (row nCols) p
+p1 s@(SpreadSheet n cs) = (nCols > 0) ==> forAll (row nCols) p
     where p :: Row -> Bool
           p (Row r) = let (SpreadSheet n' _) = tryAddRow s r in n' == n + 1
+          nCols = length cs
+
+-- removing a row decreases row length variable
+p2 :: SpreadSheet -> Int -> Property
+p2 s@(SpreadSheet n cs) i = (nCols > 0 && n > 0 && i > 0 && i < n) ==> p i
+    where p :: Int -> Bool
+          p i = let (SpreadSheet n' _) = Data.SpreadSheet.removeRow s i in n' == n - 1
           nCols = length cs
 
 main :: IO ()
@@ -54,5 +61,7 @@ properties = testGroup "Properties" qcProps
 qcProps =
     [
         QC.testProperty "adding a row increases row length variable"
-                Main.p1
+                Main.p1,
+        QC.testProperty "removing a row decreases row length variable"
+                Main.p2
     ]
