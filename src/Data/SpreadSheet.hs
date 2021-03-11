@@ -22,13 +22,15 @@ evalF (Var x t) s@(SpreadSheet _ cs) env = case lookup x cs of
         CData v -> v
         CForm f -> evalF f s env
     Nothing -> error $ "No column with name '" ++ x ++ "'"
--- TODO: What about the size of the other spreadsheet?
-evalF (CTVar tn cn t) _ env = fromMaybe (error "Table or column not found") $ do
-    table@(SpreadSheet _ cs) <- M.lookup tn env
-    col <- lookup cn cs
-    case getCol col t of
-        CData v -> return v
-        CForm f -> return $ evalF f table env
+evalF (CTVar tn cn t) (SpreadSheet n _) env = fromMaybe (error "Table or column not found") $ do
+    table@(SpreadSheet m cs) <- M.lookup tn env
+    if m < n then -- Check if the column in the other table is big enough
+        error $ "Table '" ++ tn ++ "' doesn't have enough rows"
+    else do
+        col <- lookup cn cs
+        case getCol col t of
+            CData v -> return $ take n v -- Make sure that we take the first `n` items of the data
+            CForm f -> return $ take n $ evalF f table env
 evalF (Lit a) (SpreadSheet n _) _= replicate n a
 -- Equality
 evalF (Eq a b)   s env = zipWith (==) (evalF a s env) (evalF b s env)
