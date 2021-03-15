@@ -18,7 +18,7 @@ correctLn (x:xs) = all (\y -> length y == length x) xs
 
 -- | Cheks if the raw data from the csv contains values.
 --   Takes into account if the first row is are the column names
---   via the second argument. 
+--   via the second argument.
 emptyCSV :: [[a]] -> Bool -> Bool
 emptyCSV []  _    = True
 emptyCSV [x] True = True
@@ -26,7 +26,7 @@ emptyCSV _   _    = False
 
 -- | Takes the raw data, the column naming information and replies
 --   with the constructed spreadsheet if the data is correct or with
---   an error message if some needed property does not hold. 
+--   an error message if some needed property does not hold.
 safetyFilter :: [[String]] -> Bool -> Either ErrMsg SpreadSheet
 safetyFilter rawData takeNames
   | emptyCSV  rawData takeNames = Left $ ErrMsg "csv file does not contain any data"
@@ -36,7 +36,7 @@ safetyFilter rawData takeNames
 -- | Takes a rawColumn in string form, checks what type they should be and
 --   replies with a SpreadSheetCols containing the correct type and the list
 --   with correct type.
-inferDataType :: [String] -> SpreadSheetCols
+inferDataType :: [String] -> SpreadSheetCol
 inferDataType tColumn | isJust intCol  = CInt    $ CData $ fromJust intCol
                       | isJust boolCol = CBool   $ CData $ fromJust boolCol
                       | otherwise      = CString $ CData            tColumn
@@ -45,11 +45,11 @@ inferDataType tColumn | isJust intCol  = CInt    $ CData $ fromJust intCol
             boolCol = sequenceA (map readMaybe tColumn :: [Maybe Bool])
 
 
--- | Creates the spreadsheet based on the size of the rawData with default column 
+-- | Creates the spreadsheet based on the size of the rawData with default column
 --   names and data in them based on the function inferDataType.
 --   Additionally it filters out the empty columns in the csv.
 createSpSh :: [[String]] -> Bool -> Either ErrMsg SpreadSheet
-createSpSh (n:rs) True 
+createSpSh (n:rs) True
     | length transRows == length names = Right $ SpreadSheet sheetSize finalData
     | otherwise                        = Left $ ErrMsg "Amount of column names does not match amount of non empty columns"
         where
@@ -94,4 +94,3 @@ getSpShSize (SpreadSheet n _) = n
 
 checkImportOutcome (Left (ErrMsg msg)) = [msg]
 checkImportOutcome (Right spsh)        = getColNames (getInnerList spsh) ++ [getColVal (getInnerList spsh)]
-                                          
