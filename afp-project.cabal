@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ec5d5c03f276366006754b68eebbce1447479b9e52ee9d933bfec90da94035b7
+-- hash: 1b336752469c6b392336b54f7f5ddcbff308790a0f281a6dcc5bb75e7b7f5b65
 
 name:           afp-project
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Data.SpreadSheet
       Data.Type
       DataTest
+      ReadCSV
       ShowCSV
   other-modules:
       Paths_afp_project
@@ -40,6 +41,7 @@ library
   ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
+    , split
     , vector
   default-language: Haskell2010
 
@@ -53,6 +55,7 @@ executable afp-project-exe
   build-depends:
       afp-project
     , base >=4.7 && <5
+    , split
   default-language: Haskell2010
 
 test-suite afp-project-test
@@ -66,4 +69,5 @@ test-suite afp-project-test
   build-depends:
       afp-project
     , base >=4.7 && <5
+    , split
   default-language: Haskell2010
