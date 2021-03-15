@@ -3,9 +3,9 @@ import Data.Column
 import Test.Tasty.QuickCheck as QC
 import Test.Tasty
 -- https://hackage.haskell.org/package/QuickCheck-2.14.2/docs/Test-QuickCheck-Gen.html#t:Gen
+import Data.Maybe
 
-import Data.Map.Ordered as OM
-
+import Data.List
 
 column :: Int -> Gen SpreadSheetCol
 column nRows = oneof [
@@ -20,10 +20,10 @@ instance Arbitrary SpreadSheet where
         nCols <- abs <$> arbitrary :: (Gen Int) 
         columnNames <- vectorOf nCols (arbitrary :: (Gen String))
         columnData  <- vectorOf nCols (column nRows)
-        -- entries with duplicate columnNames will be resolved
-        let columns = OM.fromList (zip columnNames columnData) 
+        -- entries with duplicate columnNames must be resolved
+        let uniqueColumnNames = nub columnNames
+        let columns = zip uniqueColumnNames columnData
         return $ SpreadSheet nRows columns
-
 
 newtype Row = Row [ColField]
     deriving Show
@@ -47,10 +47,26 @@ p1 s@(SpreadSheet n cs) = (nCols > 0) ==> forAll (row nCols) p
 
 -- removing a row decreases row length variable
 p2 :: SpreadSheet -> Int -> Property
-p2 s@(SpreadSheet n cs) i = (nCols > 0 && n > 0 && i > 0 && i < n) ==> p i
+p2 s@(SpreadSheet n cs) i = (nCols > 0 && n > 0 && i >= 0 && i < n) ==> p i
     where p :: Int -> Bool
           p i = let (SpreadSheet n' _) = Data.SpreadSheet.removeRow s i in n' == n - 1
           nCols = length cs
+
+columnInsertion :: Int -> Int -> Gen (SpreadSheetCol, Int)
+columnInsertion nRows nCols = do
+    c <- column nRows
+    i <- chooseInt (0, nCols)
+    return (c, i)
+
+-- adding a new column preserves uniqueness property
+p3 :: SpreadSheet -> String -> Property
+p3 s@(SpreadSheet n cs) k = (nub (keys cs) == keys cs) ==> forAll (columnInsertion n (length cs)) p
+    where p :: (SpreadSheetCol, Int) -> Bool
+          p (c, i) = let (SpreadSheet _ cs') = tryAddColumn s i (k, c) in keys cs' == nub (keys cs')
+          numKeys :: String -> [(String, SpreadSheetCol)] -> Int
+          numKeys k' cs' = length $ filter (==k') (keys cs')
+          keys :: [(String, SpreadSheetCol)] -> [String]
+          keys = map fst
 
 main :: IO ()
 main = defaultMain properties
@@ -63,5 +79,7 @@ qcProps =
         QC.testProperty "adding a row increases row length variable"
                 Main.p1,
         QC.testProperty "removing a row decreases row length variable"
-                Main.p2
+                Main.p2,
+        QC.testProperty "adding a new column preserves uniqueness property"
+                Main.p3
     ]

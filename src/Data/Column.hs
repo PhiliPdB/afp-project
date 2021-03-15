@@ -59,7 +59,7 @@ removeIth :: [a] -> Int -> [a]
 removeIth []     _ = []
 removeIth (x:xs) i 
     | i < 0      = xs
-    | otherwise  = removeIth xs (i - 1)
+    | otherwise  = x : removeIth xs (i - 1)
 
 removeRow :: SpreadSheetCol -> Int -> SpreadSheetCol
 removeRow _ i | i < 0 = error "i >= 0"
