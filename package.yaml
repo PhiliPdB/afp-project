@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/Phil
 dependencies:
 - base >= 4.7 && < 5
 - containers
+- split
 
 ghc-options:
 - -Wall
@@ -52,3 +53,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - afp-project
+    - tasty >= 1.2.3
+    - tasty-quickcheck >= 0.10.1.2
