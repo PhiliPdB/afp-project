@@ -7,7 +7,6 @@ import Data.Type
 import Data.SpreadSheet
 import Data.Column
 
-
 testFormula :: Formula Int
 testFormula = Prod (Var "col1" inferType) (Var "col2" inferType)
 
@@ -19,7 +18,7 @@ plus1 = Add (Var "col1" inferType) (Lit 1)
 
 
 testSpreadSheet :: SpreadSheet
-testSpreadSheet = SpreadSheet 4
+testSpreadSheet = SpreadSheet 4 
     [ ("col1", CInt  $ CData [1,2,3,4])
     , ("col2", CInt  $ CData [51,52,53,54])
     , ("col3", CInt  $ CForm testFormula)

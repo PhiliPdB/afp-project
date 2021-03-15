@@ -1,11 +1,14 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
-import Data.Column (SpreadSheetCol(..), Column (..), getCol)
+import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
 import Data.Formula (Formula(..))
 
+
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
+-- TODO: Don't export the constructor
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
+    deriving Show
 
 -- | Evaluate a given formula on a given spreadsheet
 evalF :: Formula a -> SpreadSheet -> [a]
@@ -56,3 +59,43 @@ evalSpreadSheet :: SpreadSheet -> [(String, SpreadSheetCol)]
 evalSpreadSheet s@(SpreadSheet _ cs) = map eval cs
     where -- TODO: This could possibly lead to evaluating formulas twice
           eval (n, col) = (n, tryEvalSpreadSheetCol col s)
+
+
+{-
+Functions for spreadsheet updating
+-}
+
+-- | Try to add a row of data to the spreadsheet
+tryAddRow :: SpreadSheet -> [ColField] -> SpreadSheet
+tryAddRow (SpreadSheet n cs) row | length cs == length row = SpreadSheet (n + 1) $ zipWith tryAddItem cs row
+                                 | otherwise               = error "Unmatched length" -- TODO: Error in returning datatype?
+    where tryAddItem :: (String, SpreadSheetCol) -> ColField -> (String, SpreadSheetCol)
+          tryAddItem (s, c) f = (s, tryAddField c f)
+
+-- | Remove a row of data from the spreadsheet
+removeRow :: SpreadSheet -> Int -> SpreadSheet
+removeRow (SpreadSheet n cs) i 
+        | i < 0     = error "i >= 0"
+        | otherwise = SpreadSheet (n - 1) (fmap (`removeRowFromColumn` i) cs)
+    where removeRowFromColumn :: (String, SpreadSheetCol) -> Int -> (String, SpreadSheetCol)
+          removeRowFromColumn (s, c) i = (s, Data.Column.removeRow c i)
+
+delFromAL :: Eq key => [(key, a)] -> key -> [(key, a)]
+delFromAL l key = filter (\a -> fst a /= key) l
+
+-- | Remove a row of data from the spreadsheet
+removeColumn :: SpreadSheet -> String -> SpreadSheet
+removeColumn (SpreadSheet n cs) k = SpreadSheet n (delFromAL cs k)
+
+insertAt :: [a] -> a -> Int -> [a]
+insertAt xs y 0 = y:xs
+insertAt [] y i = [y]
+insertAt (x:xs) y i
+    | i >= 0    = x : insertAt xs y (i - 1)
+    | otherwise = error "i >= 0"
+
+tryAddColumn :: SpreadSheet -> Int -> (String, SpreadSheetCol) -> SpreadSheet
+tryAddColumn s@(SpreadSheet n cs) i c@(k, _)
+    | i >= 0    = if k `elem` map fst cs then s else SpreadSheet n (insertAt cs c i)
+    | otherwise = error "i >= 0"
+
