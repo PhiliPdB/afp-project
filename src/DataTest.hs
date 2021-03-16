@@ -33,3 +33,18 @@ testCrossSpreadSheet = SpreadSheet 4
 
 testEnv :: SpreadSheetEnv
 testEnv = M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
+
+
+testAggr :: SpreadSheetEnv
+testAggr = M.fromList
+    [ ("form", SpreadSheet 5
+        [ ("item", CInt $ CData [1,2,3,4,5])
+        , ("form", CInt $ CForm $ Aggr "data" "count" (inferType :: Type Int) "item" inferType "price" inferType Eq Sum)
+        ]
+      )
+    , ("data", SpreadSheet 10
+        [ ("count", CInt $ CData [ 1, 3,  4,   1,  2, 3, 4,  2, 2, 1])
+        , ("price", CInt $ CData [10, 5, 12, 234, 43, 1, 5, 90, 2, 5])
+        ]
+      )
+    ]

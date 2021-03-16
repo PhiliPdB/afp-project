@@ -6,7 +6,7 @@ import Data.Formula (Formula(..))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
-
+import Data.List (findIndices)
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 -- TODO: Don't export the constructor
@@ -34,7 +34,9 @@ evalF (CTVar tn cn t) (SpreadSheet n _) env = fromMaybe (error "Table or column 
         case getCol col t of
             CData v -> return $ take n v -- Make sure that we take the first `n` items of the data
             CForm f -> return $ take n $ evalF f table env
-evalF (Lit a) (SpreadSheet n _) _= replicate n a
+evalF (Lit  a) (SpreadSheet n _) _ = replicate n a
+evalF (Lift a) (SpreadSheet n _) _ | length a == n = a
+                                   | otherwise     = error "Length doesn't match"
 -- Equality
 evalF (Eq a b)   s env = zipWith (==) (evalF a s env) (evalF b s env)
 -- Arithmetic
@@ -55,6 +57,29 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
 
           f (True,  x, _) = x
           f (False, _, y) = y
+
+evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) (SpreadSheet _ cs1) env = fromMaybe (error "Something went wrong") $ do
+    table@(SpreadSheet _ cs2) <- M.lookup t env
+    c1data <- do col <- lookup c1 cs2
+                 case getCol col t1 of
+                     CData v -> return v
+                     CForm f -> return $ evalF f table env
+    c2data <- do col <- lookup c2 cs1
+                 case getCol col t2 of
+                     CData v -> return v
+                     CForm f -> return $ evalF f table env
+    c3data <- do col <- lookup c3 cs2
+                 case getCol col t3 of
+                     CData v -> return v
+                     CForm f -> return $ evalF f table env
+
+    let c2aggr = map (\b -> findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data) c2data
+    let c3aggr = map (map (c3data !!)) c2aggr
+
+    return $ evalF (aggr (Lift c3aggr)) (SpreadSheet (length c2data) []) M.empty
+
+evalF (Sum x) s env = map sum (evalF x s env)
+
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. This function thus always
