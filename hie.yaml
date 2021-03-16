@@ -12,3 +12,9 @@ cradle:
       config:
         cradle:
           stack:
+            - path: "./src"
+              component: "afp-project:lib"
+            - path: "./app"
+              component: "afp-project:exe:afp-project-exe"
+            - path: "./test"
+              component: "afp-project:test:afp-project-test"
