@@ -1,5 +1,5 @@
 module ShowCSV
-    ( writeCSVFile, toCSVString
+    ( writeCSVFile, toCSVString, latexTable
     )
 where
 
@@ -27,3 +27,19 @@ toStringTable = transpose . map (\(h, c) -> h : showCol c) . evalSpreadSheet
           showCol (CBool   (CData xs)) = map show xs
           showCol (CString (CData xs)) = map show xs
           showCol _                    = error "Non-evaluated spreadsheet column"
+
+endline :: String
+endline = "\n"
+
+latexTable :: [[String]] -> String
+latexTable []     = error "Cannot convert empty spreadsheet"
+latexTable (h:bs) = "\\begin{table}" ++ endline ++ "\\begin{tabular}" ++ colAllignment ++ endline
+                    ++ header ++ body
+                    ++ "\\end{tabular}" ++ endline ++ "\\end{table}" ++ endline
+    where header :: String
+          header = intercalate "  &  " (map (\s -> "\\textbf{" ++ s ++ "}") h) ++ "\\\\" ++ endline ++ "\\hline" ++ endline 
+          body :: String
+          body = intercalate ("\\\\" ++ endline) (map (intercalate "  &  ") bs) ++ endline
+          colAllignment = "{" ++ intercalate "|" (map (const "c") [0..numCols]) ++ "}"
+          numCols = length h
+
