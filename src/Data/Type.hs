@@ -2,6 +2,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Data.Type where
 
+-- | Error message for problematic situations.
+newtype ErrMsg = ErrMsg String
+
 -- | Possible variable types
 data Type a where
     TInt    :: Type Int
