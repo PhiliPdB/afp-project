@@ -7,7 +7,7 @@ import Data.SpreadSheet
 import Data.Column
 import Data.Type
 import Data.List.Split (split, oneOf, dropDelims)
-import Data.List       (transpose)
+import Data.List       (transpose,nub)
 import Text.Read       (readMaybe)
 import Data.Maybe      (isJust, fromJust)
 
@@ -44,22 +44,34 @@ inferDataType tColumn | isJust intCol  = CInt    $ CData $ fromJust intCol
             intCol  = sequenceA (map readMaybe tColumn :: [Maybe Int])
             boolCol = sequenceA (map readMaybe tColumn :: [Maybe Bool])
 
+colDataRelation :: [[String]] -> [String] -> Bool
+colDataRelation dataCol names = all (\(a,b) -> a == b) boolPairs
+    where
+        emptyCol   = map (all null) dataCol
+        emptyNames = map null names
+        boolPairs  = zip emptyCol emptyNames
+
 
 -- | Creates the spreadsheet based on the size of the rawData with default column
 --   names and data in them based on the function inferDataType.
 --   Additionally it filters out the empty columns in the csv.
 createSpSh :: [[String]] -> Bool -> Either ErrMsg SpreadSheet
 createSpSh (n:rs) True
-    | length transRows == length names = Right $ SpreadSheet sheetSize finalData
-    | otherwise                        = Left $ ErrMsg "Amount of column names does not match amount of non empty columns"
+    | everythingOk     = Right $ SpreadSheet sheetSize finalData
+    | not matchUp      = Left $ ErrMsg "Column names and non empty columns do not match up"
+    | not noDuplicates = Left $ ErrMsg "Column names are not unique"
         where
-            sheetSize = length rs - 1
-            transRows = filter (not . all null) $ transpose rs
-            names     = filter (not . null) n
-            finalData = zip names $ map inferDataType transRows
+            everythingOk = matchUp && noDuplicates
+            matchUp      = colDataRelation transRows n
+            noDuplicates = length names == length (nub names)
+            sheetSize    = length rs
+            transRows    = transpose rs
+            filtRows     = filter (not . all null) transRows
+            names        = filter (not . null) n
+            finalData    = zip names $ map inferDataType filtRows
 createSpSh rows False = Right $ SpreadSheet sheetSize finalData
         where
-            sheetSize = length rows - 1
+            sheetSize = length rows
             transRows = filter (not . all null) $ transpose rows
             n         = ["col" ++ show x | x <- [1..(length transRows)]]
             finalData = zip n $ map inferDataType transRows
@@ -75,9 +87,9 @@ importCSV fPath sep takeNames= do
                         return $ safetyFilter rawData takeNames
 
 
--- TODO: There is one glitch connected to having the , sign as value in a column.
---       In this case it is writen as "," in the csv, but importCSV will read it
---       as two " signs separetad with , . Maybe playing around with oneOf can fix the problem.
+-- There is one glitch connected to having the , sign as value in a column.
+-- In this case it is writen as "," in the csv, but importCSV will read it
+-- as two " signs separetad with.
 
 -- temporary testing tools
 getColVal []                         = []
@@ -90,7 +102,7 @@ getColNames ((x,_):xs) = x:getColNames xs
 
 getInnerList (SpreadSheet _ l) = l
 
-getSpShSize (SpreadSheet n _) = n
+getSpShSize (Right (SpreadSheet n _)) = n
 
 checkImportOutcome (Left (ErrMsg msg)) = [msg]
 checkImportOutcome (Right spsh)        = getColNames (getInnerList spsh) ++ [getColVal (getInnerList spsh)]
