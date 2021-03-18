@@ -1,5 +1,5 @@
-module ShowCSV
-    ( writeCSVFile, toCSVString, latexTable
+module Export
+    ( writeCSVFile, toCSVString, toLatex
     )
 where
 
@@ -27,6 +27,11 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
           showCol (CBool   (CData xs)) = map show xs
           showCol (CString (CData xs)) = map show xs
           showCol _                    = error "Non-evaluated spreadsheet column"
+
+
+-- | Given the spreadsheet env, convert a spreadsheet into a latex table string
+toLatex :: SpreadSheetEnv -> SpreadSheet -> String
+toLatex env s = latexTable $ toStringTable env s 
 
 endline :: String
 endline = "\n"
