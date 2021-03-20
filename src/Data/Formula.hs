@@ -23,6 +23,9 @@ data Formula a where
     Min        :: Formula Int -> Formula Int -> Formula Int
     Max        :: Formula Int -> Formula Int -> Formula Int
     -- TODO: Number comparison
+
+    -- LEq        :: Ord a => Formula a -> Formula a -> Formula Bool
+
     -- Boolean logic
     And        :: Formula Bool -> Formula Bool -> Formula Bool
     Or         :: Formula Bool -> Formula Bool -> Formula Bool

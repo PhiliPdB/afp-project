@@ -7,6 +7,8 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.List (findIndices)
+import Data.Type (Type)
+
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 -- TODO: Don't export the constructor
@@ -58,25 +60,29 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
           f (True,  x, _) = x
           f (False, _, y) = y
 
-evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) (SpreadSheet _ cs1) env = fromMaybe (error "Something went wrong") $ do
-    table@(SpreadSheet _ cs2) <- M.lookup t env
-    c1data <- do col <- lookup c1 cs2
-                 case getCol col t1 of
-                     CData v -> return v
-                     CForm f -> return $ evalF f table env
-    c2data <- do col <- lookup c2 cs1
-                 case getCol col t2 of
-                     CData v -> return v
-                     CForm f -> return $ evalF f table env
-    c3data <- do col <- lookup c3 cs2
-                 case getCol col t3 of
-                     CData v -> return v
-                     CForm f -> return $ evalF f table env
+evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Something went wrong") $ do
+        -- First we lookup the second table in the environment
+        cTable <- M.lookup t env
+        -- Get the data from all the columns
+        c1data <- getData c1 t1 cTable
+        c2data <- getData c2 t2  table
+        c3data <- getData c3 t3 cTable
 
-    let c2aggr = map (\b -> findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data) c2data
-    let c3aggr = map (map (c3data !!)) c2aggr
-
-    return $ evalF (aggr (Lift c3aggr)) (SpreadSheet (length c2data) []) M.empty
+        -- First we will group all the items from column 1 based on the given condition function.
+        -- Here, we look for each item b in c2, which items in c1 fulfill this condition. And then group the indeces
+        -- of the items in c1 together.
+        let c2aggr = map (\b -> findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data) c2data
+        -- With these indeces collected, we can map them to the corresponding data in c3.
+        let c3aggr = map (map (c3data !!)) c2aggr
+        -- Then we run the aggregator function over these items, such that we have a single value per row.
+        return $ evalF (aggr (Lift c3aggr)) (SpreadSheet (length c2data) []) M.empty
+    where -- | Function to extract data from a column of certain type that's inside the given spreadsheet
+          getData :: String -> Type a -> SpreadSheet -> Maybe [a]
+          getData colName colType tab@(SpreadSheet _ cols) =
+              do col <- lookup colName cols
+                 case getCol col colType of
+                     CData v -> return v
+                     CForm f -> return $ evalF f tab env
 
 evalF (Sum x) s env = map sum (evalF x s env)
 
