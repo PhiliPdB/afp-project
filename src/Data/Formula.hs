@@ -2,6 +2,7 @@
 module Data.Formula where
 
 import Data.Type (Type, CT)
+import Data.Hourglass
 
 -- | Formula language used for making calculations
 data Formula a where
@@ -28,3 +29,7 @@ data Formula a where
     Not        :: Formula Bool -> Formula Bool
     -- Condition
     IfThenElse :: Formula Bool -> Formula a -> Formula a -> Formula a
+    -- Time functions
+    -- hourglass does not specify any interesting and very usefull
+    -- functions besides using elapsed in various combinationts.
+    -- What should be added then?

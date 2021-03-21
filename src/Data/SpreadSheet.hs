@@ -6,7 +6,7 @@ import Data.Formula (Formula(..))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
-
+import Data.Hourglass
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 -- TODO: Don't export the constructor
