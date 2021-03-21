@@ -10,6 +10,7 @@ import Data.List.Split (split, oneOf, dropDelims)
 import Data.List       (transpose,nub)
 import Text.Read       (readMaybe)
 import Data.Maybe      (isJust, fromJust)
+import Data.Hourglass
 
 -- | Checks if all lists are of the same length
 correctLn :: [[a]] -> Bool
@@ -37,12 +38,35 @@ safetyFilter rawData takeNames
 --   replies with a SpreadSheetCols containing the correct type and the list
 --   with correct type.
 inferDataType :: [String] -> SpreadSheetCol
-inferDataType tColumn | isJust intCol  = CInt    $ CData $ fromJust intCol
-                      | isJust boolCol = CBool   $ CData $ fromJust boolCol
-                      | otherwise      = CString $ CData            tColumn
+inferDataType tColumn | isJust intCol     = CInt     $ CData $ fromJust intCol
+                      | isJust boolCol    = CBool    $ CData $ fromJust boolCol
+                      | isJust monthCol   = CMonth   $ CData $ fromJust monthCol
+                      | isJust dayCol     = CWeekDay $ CData $ fromJust dayCol
+                      | isJust timeLnCol  = CTime    $ CData $ map dtTime $ fromJust timeLnCol
+                      | isJust timeShCol  = CTime    $ CData $ map dtTime $ fromJust timeShCol
+                      | isJust dateNbCol  = CDate    $ CData $ map dtDate $ fromJust dateNbCol
+                      | isJust dateStCol  = CDate    $ CData $ map dtDate $ fromJust dateStCol
+                      | isJust dateNbRCol = CDate    $ CData $ map dtDate $ fromJust dateNbRCol
+                      | isJust dateStRCol = CDate    $ CData $ map dtDate $ fromJust dateStRCol
+                      | otherwise         = CString  $ CData            tColumn
         where
-            intCol  = sequenceA (map readMaybe tColumn :: [Maybe Int])
-            boolCol = sequenceA (map readMaybe tColumn :: [Maybe Bool])
+            intCol     = sequenceA (map readMaybe tColumn :: [Maybe Int])
+            boolCol    = sequenceA (map readMaybe tColumn :: [Maybe Bool])
+            monthCol   = sequenceA (map readMaybe tColumn :: [Maybe Month])
+            dayCol     = sequenceA (map readMaybe tColumn :: [Maybe WeekDay])
+            timeLnCol  = traverse (timeParse "H:MI:S")      tColumn
+            -- time in long    HH:MM:SS
+            timeShCol  = traverse (timeParse "H:MI")        tColumn
+            -- time in short   HH:MM (this must be after HH:MM:SS because of how localTimeParse works)
+            dateNbCol  = traverse (timeParse "DD-MM-YYYY")  tColumn
+            -- date in num     DD-MM-YYYY
+            dateStCol  = traverse (timeParse "DD-Mon-YYYY") tColumn
+            -- date with month DD-Mon-YYYY
+            dateNbRCol = traverse (timeParse "YYYY-MM-DD")  tColumn
+            -- date in num     YYYY-MM-DD
+            dateStRCol = traverse (timeParse "YYYY-Mon-DD") tColumn
+            -- date with month YYYY-Mon-DD
+
 
 colDataRelation :: [[String]] -> [String] -> Bool
 colDataRelation dataCol names = all (\(a,b) -> a == b) boolPairs
@@ -93,9 +117,13 @@ importCSV fPath sep takeNames= do
 
 -- temporary testing tools
 getColVal []                         = []
-getColVal ((_,CInt    (CData x)):xs) = show x ++ getColVal xs
-getColVal ((_,CBool   (CData x)):xs) = show x ++ getColVal xs
-getColVal ((_,CString (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CInt     (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CBool    (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CMonth   (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CWeekDay (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CTime    (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CDate    (CData x)):xs) = show x ++ getColVal xs
+getColVal ((_,CString  (CData x)):xs) = show x ++ getColVal xs
 
 getColNames []         = []
 getColNames ((x,_):xs) = x:getColNames xs
@@ -103,6 +131,7 @@ getColNames ((x,_):xs) = x:getColNames xs
 getInnerList (SpreadSheet _ l) = l
 
 getSpShSize (Right (SpreadSheet n _)) = n
+getSpShSize (Left _)                  = -1
 
 checkImportOutcome (Left (ErrMsg msg)) = [msg]
 checkImportOutcome (Right spsh)        = getColNames (getInnerList spsh) ++ [getColVal (getInnerList spsh)]
