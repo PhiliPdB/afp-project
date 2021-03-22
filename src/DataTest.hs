@@ -7,6 +7,8 @@ import Data.Type
 import Data.SpreadSheet
 import Data.Column
 import qualified Data.Map as M
+import Data.Maybe (fromJust)
+
 
 testFormula :: Formula Int
 testFormula = Prod (Var "col1" inferType) (Var "col2" inferType)
@@ -48,3 +50,6 @@ testAggr = M.fromList
         ]
       )
     ]
+
+testForm :: SpreadSheet
+testForm = fromJust $ M.lookup "form" testAggr

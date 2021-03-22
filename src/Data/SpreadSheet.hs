@@ -75,7 +75,7 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
         -- With these indeces collected, we can map them to the corresponding data in c3.
         let c3aggr = map (map (c3data !!)) c2aggr
         -- Then we run the aggregator function over these items, such that we have a single value per row.
-        return $ evalF (aggr (Lift c3aggr)) (SpreadSheet (length c2data) []) M.empty
+        return $ evalF (aggr (Lift c3aggr)) table env
     where -- | Function to extract data from a column of certain type that's inside the given spreadsheet
           getData :: String -> Type a -> SpreadSheet -> Maybe [a]
           getData colName colType tab@(SpreadSheet _ cols) =
