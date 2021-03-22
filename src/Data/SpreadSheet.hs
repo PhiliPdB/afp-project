@@ -71,7 +71,11 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
         -- First we will group all the items from column 1 based on the given condition function.
         -- Here, we look for each item b in c2, which items in c1 fulfill this condition. And then group the indeces
         -- of the items in c1 together.
-        let c2aggr = map (\b -> findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data) c2data
+
+        -- Helper function to find the indeces in c1 where the condition compared to b holds.
+        let findIndecesInC1 b = findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data
+        -- Find the indeces for each item in c2data
+        let c2aggr = map findIndecesInC1 c2data
         -- With these indeces collected, we can map them to the corresponding data in c3.
         let c3aggr = map (map (c3data !!)) c2aggr
         -- Then we run the aggregator function over these items, such that we have a single value per row.
