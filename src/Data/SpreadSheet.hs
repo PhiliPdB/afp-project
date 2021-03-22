@@ -6,12 +6,36 @@ import Data.Formula (Formula(..))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
+import Data.List (nub)
 
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 -- TODO: Don't export the constructor
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
     deriving Show
+
+uniformLength :: [SpreadSheetCol] -> Bool
+uniformLength cs = 
+    case lengthOfCols of
+        [] -> True
+        (c:cs) -> all (==c) cs 
+  where 
+        lengthOfCols :: [Int]
+        lengthOfCols = foldl f [] cs
+        f :: [Int] -> SpreadSheetCol -> [Int] 
+        f is (CInt (CData d)) = length d : is
+        f is (CString (CData d)) = length d : is
+        f is (CBool (CData d)) = length d : is
+        f is  _ = is
+
+spreadSheet :: [(String, SpreadSheetCol)] -> Maybe SpreadSheet
+spreadSheet [] = Just $ SpreadSheet 0 []
+spreadSheet cs@(c:_) 
+    | hasUniqueColumnNames && uniformLength cols = Just $ SpreadSheet (length c) cs
+    | otherwise                                          = Nothing
+  where hasUniqueColumnNames = length (nub names) == length names
+        cols = map snd cs
+        names = map fst cs 
 
 -- | Collection of multiple spreadsheets
 --   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
