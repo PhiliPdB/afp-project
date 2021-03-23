@@ -55,6 +55,8 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
 
           f (True,  x, _) = x
           f (False, _, y) = y
+-- Time functions
+
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. This function thus always

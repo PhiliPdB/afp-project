@@ -30,6 +30,13 @@ data Formula a where
     -- Condition
     IfThenElse :: Formula Bool -> Formula a -> Formula a -> Formula a
     -- Time functions
-    -- hourglass does not specify any interesting and very usefull
-    -- functions besides using elapsed in various combinationts.
-    -- What should be added then?
+    TimeAdd    :: Time t => Formula t -> Formula Duration -> Formula t
+    TimeSub    :: Time t => Formula t -> Formula Duration -> Formula t
+    AddPeriod  :: Formula Date -> Formula Period -> Formula Date
+    SubPeriod  :: Formula Date -> Formula Period -> Formula Date
+    IsLeapYear :: Formula Int  -> Formula Bool
+    GetWeekDay :: Formula Date -> Formula WeekDay
+    GetYearDay :: Formula Date -> Formula Int
+    MonthDays  :: Formula Int  -- ^ for information about leap years
+                  -> Formula Month 
+                  -> Formula Int 

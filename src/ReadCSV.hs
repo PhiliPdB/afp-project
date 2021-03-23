@@ -38,34 +38,48 @@ safetyFilter rawData takeNames
 --   replies with a SpreadSheetCols containing the correct type and the list
 --   with correct type.
 inferDataType :: [String] -> SpreadSheetCol
-inferDataType tColumn | isJust intCol     = CInt     $ CData $ fromJust intCol
-                      | isJust boolCol    = CBool    $ CData $ fromJust boolCol
-                      | isJust monthCol   = CMonth   $ CData $ fromJust monthCol
-                      | isJust dayCol     = CWeekDay $ CData $ fromJust dayCol
-                      | isJust timeLnCol  = CTime    $ CData $ map dtTime $ fromJust timeLnCol
-                      | isJust timeShCol  = CTime    $ CData $ map dtTime $ fromJust timeShCol
-                      | isJust dateNbCol  = CDate    $ CData $ map dtDate $ fromJust dateNbCol
-                      | isJust dateStCol  = CDate    $ CData $ map dtDate $ fromJust dateStCol
-                      | isJust dateNbRCol = CDate    $ CData $ map dtDate $ fromJust dateNbRCol
-                      | isJust dateStRCol = CDate    $ CData $ map dtDate $ fromJust dateStRCol
-                      | otherwise         = CString  $ CData            tColumn
+inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intCol
+                      | isJust boolCol       = CBool     $ CData $ fromJust boolCol
+                      | isJust monthCol      = CMonth    $ CData $ fromJust monthCol
+                      | isJust dayCol        = CWeekDay  $ CData $ fromJust dayCol
+                      | isJust timeLnCol     = CTime     $ CData $ map dtTime $ fromJust timeLnCol
+                      | isJust timeShCol     = CTime     $ CData $ map dtTime $ fromJust timeShCol
+                      | isJust dateTimeShCol = CDateTime $ CData $ fromJust dateTimeShCol
+                      | isJust dateTimeLnCol = CDateTime $ CData $ fromJust dateTimeShCol
+                      | isJust dateTimeSLCol = CDateTime $ CData $ fromJust dateTimeShCol
+                      | isJust dateTimeSSCol = CDateTime $ CData $ fromJust dateTimeShCol
+                      | isJust dateNbCol     = CDate     $ CData $ map dtDate $ fromJust dateNbCol
+                      | isJust dateStCol     = CDate     $ CData $ map dtDate $ fromJust dateStCol
+                      | isJust dateNbRCol    = CDate     $ CData $ map dtDate $ fromJust dateNbRCol
+                      | isJust dateStRCol    = CDate     $ CData $ map dtDate $ fromJust dateStRCol
+                      | otherwise            = CString   $ CData            tColumn
         where
-            intCol     = sequenceA (map readMaybe tColumn :: [Maybe Int])
-            boolCol    = sequenceA (map readMaybe tColumn :: [Maybe Bool])
-            monthCol   = sequenceA (map readMaybe tColumn :: [Maybe Month])
-            dayCol     = sequenceA (map readMaybe tColumn :: [Maybe WeekDay])
-            timeLnCol  = traverse (timeParse "H:MI:S")      tColumn
+            -- some parse attempts must come before other because of how timeParse works
+            intCol        = sequenceA (map readMaybe tColumn :: [Maybe Int])
+            boolCol       = sequenceA (map readMaybe tColumn :: [Maybe Bool])
+            monthCol      = sequenceA (map readMaybe tColumn :: [Maybe Month])
+            dayCol        = sequenceA (map readMaybe tColumn :: [Maybe WeekDay])
             -- time in long    HH:MM:SS
-            timeShCol  = traverse (timeParse "H:MI")        tColumn
-            -- time in short   HH:MM (this must be after HH:MM:SS because of how localTimeParse works)
-            dateNbCol  = traverse (timeParse "DD-MM-YYYY")  tColumn
+            timeLnCol     = traverse (timeParse "H:MI:S")             tColumn
+            -- time in short   HH:MM
+            timeShCol     = traverse (timeParse "H:MI")               tColumn
+            -- date-time in long num DD-MM-YYYY HH:MM:SS
+            dateTimeShCol = traverse (timeParse "DD-MM-YYYY H:MI:S")  tColumn
+            -- date-time in short num DD-MM-YYYY HH:MM
+            dateTimeLnCol = traverse (timeParse "DD-MM-YYYY H:MI")    tColumn
+            -- date-time with month long DD-Mon-YYYY HH:MM:SS
+            dateTimeSLCol = traverse (timeParse "DD-Mon-YYYY H:MI:S") tColumn            
+            -- date-time with month short DD-Mon-YYYY HH:MM
+            dateTimeSSCol = traverse (timeParse "DD-Mon-YYYY H:MI")   tColumn
             -- date in num     DD-MM-YYYY
-            dateStCol  = traverse (timeParse "DD-Mon-YYYY") tColumn
+            dateNbCol     = traverse (timeParse "DD-MM-YYYY")         tColumn
             -- date with month DD-Mon-YYYY
-            dateNbRCol = traverse (timeParse "YYYY-MM-DD")  tColumn
+            dateStCol     = traverse (timeParse "DD-Mon-YYYY")        tColumn
             -- date in num     YYYY-MM-DD
-            dateStRCol = traverse (timeParse "YYYY-Mon-DD") tColumn
+            dateNbRCol    = traverse (timeParse "YYYY-MM-DD")         tColumn
             -- date with month YYYY-Mon-DD
+            dateStRCol    = traverse (timeParse "YYYY-Mon-DD")        tColumn
+            -- TODO: Add a way to parse duration and period from csv            
 
 
 colDataRelation :: [[String]] -> [String] -> Bool

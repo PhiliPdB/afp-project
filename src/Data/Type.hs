@@ -9,13 +9,16 @@ newtype ErrMsg = ErrMsg String
 
 -- | Possible variable types
 data Type a where
-    TInt     :: Type Int
-    TBool    :: Type Bool
-    TString  :: Type String
-    TTime    :: Type TimeOfDay
-    TWeekDay :: Type WeekDay
-    TMonth   :: Type Month
-    TDate    :: Type Date
+    TInt      :: Type Int
+    TBool     :: Type Bool
+    TString   :: Type String
+    TTime     :: Type TimeOfDay
+    TWeekDay  :: Type WeekDay
+    TMonth    :: Type Month
+    TDate     :: Type Date
+    TDateTime :: Type DateTime
+    TDuration :: Type Duration
+    TPeriod   :: Type Period
 
 -- | Common column-type functions
 class CT a where
@@ -41,3 +44,12 @@ instance CT Month where
 
 instance CT Date where
     inferType = TDate
+
+instance CT DateTime where
+    inferType = TDateTime
+
+instance CT Duration where
+    inferType = TDuration
+
+instance CT Period where
+    inferType = TPeriod
