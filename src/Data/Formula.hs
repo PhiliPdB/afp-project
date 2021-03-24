@@ -18,12 +18,12 @@ data Formula a where
     Eq         :: Eq a => Formula a -> Formula a -> Formula Bool
     NEq        :: Eq a => Formula a -> Formula a -> Formula Bool
     -- Arithmetic
-    Prod       :: Formula Int -> Formula Int -> Formula Int
-    Add        :: Formula Int -> Formula Int -> Formula Int
-    Sub        :: Formula Int -> Formula Int -> Formula Int
-    Min        :: Formula Int -> Formula Int -> Formula Int
-    Max        :: Formula Int -> Formula Int -> Formula Int
+    Prod       :: Num a => Formula a -> Formula a -> Formula a
+    Add        :: Num a => Formula a -> Formula a -> Formula a
+    Sub        :: Num a => Formula a -> Formula a -> Formula a
     -- Ordering methods
+    Min        :: Ord a => Formula a -> Formula a -> Formula a
+    Max        :: Ord a => Formula a -> Formula a -> Formula a
     -- | Less than
     LT         :: Ord a => Formula a -> Formula a -> Formula Bool
     -- | Less than or equal to
