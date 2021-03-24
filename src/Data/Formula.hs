@@ -16,16 +16,22 @@ data Formula a where
     Lift       :: CT a => [a] -> Formula a
     -- | Equality
     Eq         :: Eq a => Formula a -> Formula a -> Formula Bool
-    -- TODO: Also a Not Equal?
+    NEq        :: Eq a => Formula a -> Formula a -> Formula Bool
     -- Arithmetic
     Prod       :: Formula Int -> Formula Int -> Formula Int
     Add        :: Formula Int -> Formula Int -> Formula Int
     Sub        :: Formula Int -> Formula Int -> Formula Int
     Min        :: Formula Int -> Formula Int -> Formula Int
     Max        :: Formula Int -> Formula Int -> Formula Int
-    -- TODO: Number comparison
-
-    -- LEq        :: Ord a => Formula a -> Formula a -> Formula Bool
+    -- Ordering methods
+    -- | Less than
+    LT         :: Ord a => Formula a -> Formula a -> Formula Bool
+    -- | Less than or equal to
+    LEq        :: Ord a => Formula a -> Formula a -> Formula Bool
+    -- | Greater than
+    GT         :: Ord a => Formula a -> Formula a -> Formula Bool
+    -- | Greater than or equal to
+    GEq        :: Ord a => Formula a -> Formula a -> Formula Bool
 
     -- Boolean logic
     And        :: Formula Bool -> Formula Bool -> Formula Bool

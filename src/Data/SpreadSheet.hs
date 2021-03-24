@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
+import Prelude hiding (LT, GT)
+
 import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
 import Data.Formula (Formula(..))
 import Data.Map (Map)
@@ -42,12 +44,18 @@ evalF (Lift a) (SpreadSheet n _) _ | length a == n = a
                                    | otherwise     = error "Length doesn't match"
 -- Equality
 evalF (Eq a b)   s env = zipWith (==) (evalF a s env) (evalF b s env)
+evalF (NEq a b)  s env = zipWith (/=) (evalF a s env) (evalF b s env)
 -- Arithmetic
 evalF (Prod a b) s env = zipWith (*)  (evalF a s env) (evalF b s env)
 evalF (Add  a b) s env = zipWith (+)  (evalF a s env) (evalF b s env)
 evalF (Sub  a b) s env = zipWith (-)  (evalF a s env) (evalF b s env)
 evalF (Min  a b) s env = zipWith min  (evalF a s env) (evalF b s env)
 evalF (Max  a b) s env = zipWith max  (evalF a s env) (evalF b s env)
+-- Ordering
+evalF (LT   a b) s env = zipWith (<)  (evalF a s env) (evalF b s env)
+evalF (LEq  a b) s env = zipWith (<=) (evalF a s env) (evalF b s env)
+evalF (GT   a b) s env = zipWith (>)  (evalF a s env) (evalF b s env)
+evalF (GEq  a b) s env = zipWith (>=) (evalF a s env) (evalF b s env)
 -- Boolean logic
 evalF (And a b)  s env = zipWith (&&) (evalF a s env) (evalF b s env)
 evalF (Or  a b)  s env = zipWith (||) (evalF a s env) (evalF b s env)
