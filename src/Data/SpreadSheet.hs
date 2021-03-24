@@ -10,7 +10,6 @@ import Data.List (nub)
 
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
--- TODO: Don't export the constructor
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
     deriving Show
 
@@ -80,23 +79,29 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
           f (True,  x, _) = x
           f (False, _, y) = y
 
+
+data SpreadSheetColumnData = DInt    [Int]
+                           | DBool   [Bool]
+                           | DString [String]
+    deriving (Show, Eq, Ord)
+
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. This function thus always
 --   returns a `CData` column.
 -- TODO: Remove code duplication if possible
-tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetCol
+tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetColumnData
 tryEvalSpreadSheetCol (CInt c)    s env = case c of
-    CData d -> CInt    $ CData d
-    CForm f -> CInt    $ CData $ evalF f s env
+    CData d -> DInt     d
+    CForm f -> DInt     $ evalF f s env
 tryEvalSpreadSheetCol (CBool c)   s env = case c of
-    CData d -> CBool   $ CData d
-    CForm f -> CBool   $ CData $ evalF f s env
+    CData d -> DBool    d
+    CForm f -> DBool    $ evalF f s env
 tryEvalSpreadSheetCol (CString c) s env = case c of
-    CData d -> CString $ CData d
-    CForm f -> CString $ CData $ evalF f s env
+    CData d -> DString  d
+    CForm f -> DString  $ evalF f s env
 
 -- | Evaluate a whole spreadsheet and get the columns with only data
-evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetCol)]
+evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetColumnData)]
 evalSpreadSheet s@(SpreadSheet _ cs) env = map eval cs
     where -- TODO: This could possibly lead to evaluating formulas twice
           eval (n, col) = (n, tryEvalSpreadSheetCol col s env)
