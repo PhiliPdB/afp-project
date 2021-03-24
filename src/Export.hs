@@ -1,5 +1,5 @@
-module ShowCSV
-    ( writeCSVFile, toCSVString
+module Export
+    ( writeCSVFile, toCSVString, toLatex
     )
 where
 
@@ -26,3 +26,22 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
           showCol (DInt    xs) = map show xs
           showCol (DBool   xs) = map show xs
           showCol (DString xs) = map show xs
+
+-- | Given the spreadsheet env, convert a spreadsheet into a latex table string
+toLatex :: SpreadSheetEnv -> SpreadSheet -> String
+toLatex env s = latexTable $ toStringTable env s 
+
+endline :: String
+endline = "\n"
+
+latexTable :: [[String]] -> String
+latexTable []     = error "Cannot convert empty spreadsheet"
+latexTable (h:bs) = "\\begin{table}" ++ endline ++ "\\begin{tabular}" ++ colAllignment ++ endline
+                    ++ header ++ body
+                    ++ "\\end{tabular}" ++ endline ++ "\\end{table}" ++ endline
+    where header :: String
+          header = intercalate "  &  " (map (\s -> "\\textbf{" ++ s ++ "}") h) ++ "\\\\" ++ endline ++ "\\hline" ++ endline 
+          body :: String
+          body = intercalate ("\\\\" ++ endline) (map (intercalate "  &  ") bs) ++ endline
+          colAllignment = "{" ++ intercalate "|" (map (const "c") [0..numCols]) ++ "}"
+          numCols = length h

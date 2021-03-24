@@ -10,6 +10,7 @@ data Type a where
     TInt    :: Type Int
     TBool   :: Type Bool
     TString :: Type String
+    TArray  :: Type a -> Type [a]
 
 -- | Common column-type functions
 class CT a where
@@ -23,3 +24,6 @@ instance CT Bool where
 
 instance CT String where
     inferType = TString
+
+instance CT a => CT [a] where
+    inferType = TArray inferType
