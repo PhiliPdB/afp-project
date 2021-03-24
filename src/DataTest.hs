@@ -8,6 +8,8 @@ import Data.SpreadSheet
 import Data.Column
 import qualified Data.Map as M
 import Data.Hourglass
+import Data.Maybe (fromJust)
+
 
 testFormula :: Formula Int
 testFormula = Prod (Var "col1" inferType) (Var "col2" inferType)
@@ -26,7 +28,7 @@ testSpreadSheet = SpreadSheet 5
     , ("col3" , CInt  $ CForm testFormula)
     , ("col4" , CBool $ CData [True, False, True, False, True])
     , ("col5" , CTime     $ CData timeList)
-    , ("col6" , CWeekDay  $ CData [Monday, Tuesday, Thursday, Friday, Sunday]) 
+    , ("col6" , CWeekDay  $ CData [Monday, Tuesday, Thursday, Friday, Sunday])
     , ("col7" , CMonth    $ CData [March, April, May, June, July])
     , ("col8" , CDate     $ CData dateList)
     , ("col9" , CDateTime     $ CData dateTimeList)
@@ -47,3 +49,21 @@ testCrossSpreadSheet = SpreadSheet 4
 
 testEnv :: SpreadSheetEnv
 testEnv = M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
+
+
+testAggr :: SpreadSheetEnv
+testAggr = M.fromList
+    [ ("form", SpreadSheet 5
+        [ ("item", CInt $ CData [1,2,3,4,5])
+        , ("form", CInt $ CForm $ Aggr "data" "count" (inferType :: Type Int) "item" inferType "price" inferType Eq Sum)
+        ]
+      )
+    , ("data", SpreadSheet 10
+        [ ("count", CInt $ CData [ 1, 3,  4,   1,  2, 3, 4,  2, 2, 1])
+        , ("price", CInt $ CData [10, 5, 12, 234, 43, 1, 5, 90, 2, 5])
+        ]
+      )
+    ]
+
+testForm :: SpreadSheet
+testForm = fromJust $ M.lookup "form" testAggr

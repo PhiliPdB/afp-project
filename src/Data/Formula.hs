@@ -12,7 +12,8 @@ data Formula a where
                -> String -- ^ Name of the column
                -> Type a -> Formula a
     -- | Literal of one of the supported column types
-    Lit        :: CT a => a -> Formula a
+    Lit        :: CT a =>  a  -> Formula a
+    Lift       :: CT a => [a] -> Formula a
     -- | Equality
     Eq         :: Eq a => Formula a -> Formula a -> Formula Bool
     -- TODO: Also a Not Equal?
@@ -23,12 +24,26 @@ data Formula a where
     Min        :: Formula Int -> Formula Int -> Formula Int
     Max        :: Formula Int -> Formula Int -> Formula Int
     -- TODO: Number comparison
+
+    -- LEq        :: Ord a => Formula a -> Formula a -> Formula Bool
+
     -- Boolean logic
     And        :: Formula Bool -> Formula Bool -> Formula Bool
     Or         :: Formula Bool -> Formula Bool -> Formula Bool
     Not        :: Formula Bool -> Formula Bool
     -- Condition
     IfThenElse :: Formula Bool -> Formula a -> Formula a -> Formula a
+    -- Aggregation
+    Aggr :: (CT a, CT b, CT c)
+         => String                                   -- ^ Table name of the table we want to aggregate
+         -> String -> Type a                         -- ^ Column of the data in the other table we want to filter
+         -> String -> Type b                         -- ^ Column in the current table to determine how to group the rows in a
+         -> String -> Type c                         -- ^ Column in the other table with the values we should put in the grouped items
+         -> (Formula a -> Formula b -> Formula Bool) -- ^ Function to decide the grouping of columns a and b
+         -> (Formula [c] -> Formula d)               -- ^ Aggregation function to map the values to a single value
+         -> Formula d
+
+    Sum :: Formula [Int] -> Formula Int
     -- Time functions
     TimeAdd    :: Time t => Formula t -> Formula Duration -> Formula t
     TimeSub    :: Time t => Formula t -> Formula Duration -> Formula t
@@ -38,5 +53,5 @@ data Formula a where
     GetWeekDay :: Formula Date -> Formula WeekDay
     GetYearDay :: Formula Date -> Formula Int
     MonthDays  :: Formula Int  -- ^ for information about leap years
-                  -> Formula Month 
-                  -> Formula Int 
+                  -> Formula Month
+                  -> Formula Int

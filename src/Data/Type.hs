@@ -12,6 +12,7 @@ data Type a where
     TInt      :: Type Int
     TBool     :: Type Bool
     TString   :: Type String
+    TArray    :: Type a -> Type [a]
     TTime     :: Type TimeOfDay
     TWeekDay  :: Type WeekDay
     TMonth    :: Type Month
@@ -32,6 +33,9 @@ instance CT Bool where
 
 instance CT String where
     inferType = TString
+
+instance CT a => CT [a] where
+    inferType = TArray inferType
 
 instance CT TimeOfDay where
     inferType = TTime
