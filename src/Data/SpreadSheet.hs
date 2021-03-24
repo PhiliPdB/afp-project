@@ -11,7 +11,7 @@ import Data.Maybe (fromMaybe)
 import Data.Hourglass
 import Data.List (findIndices)
 import Data.Type (Type)
-
+import Data.TimeHelper
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 -- TODO: Don't export the constructor
@@ -98,6 +98,14 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
 
 evalF (Sum x) s env = map sum (evalF x s env)
 -- Time functions
+evalF (TimeAdd t d)   s env = zipWith timeAdd         (evalF t s env) (evalF d s env)
+evalF (TimeSub t d)   s env = zipWith timeAdd         (evalF t s env) (map invDur (evalF d s env))
+evalF (AddPeriod d p) s env = zipWith dateAddPeriod   (evalF d s env) (evalF p s env)
+evalF (SubPeriod d p) s env = zipWith dateAddPeriod   (evalF d s env) (map invPer (evalF p s env))
+evalF (IsLeapYear d)  s env = map     isLeapYear      (evalF d s env)
+evalF (GetWeekDay d)  s env = map     getWeekDay      (evalF d s env)
+evalF (GetYearDay d)  s env = map     getDayOfTheYear (evalF d s env)
+evalF (MonthDays y m) s env = zipWith daysInMonth     (evalF y s env) (evalF m s env)
 
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
@@ -105,15 +113,37 @@ evalF (Sum x) s env = map sum (evalF x s env)
 --   returns a `CData` column.
 -- TODO: Remove code duplication if possible
 tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetCol
-tryEvalSpreadSheetCol (CInt c)    s env = case c of
-    CData d -> CInt    $ CData d
-    CForm f -> CInt    $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CBool c)   s env = case c of
-    CData d -> CBool   $ CData d
-    CForm f -> CBool   $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CString c) s env = case c of
-    CData d -> CString $ CData d
-    CForm f -> CString $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CInt c)      s env = case c of
+    CData d -> CInt      $ CData d
+    CForm f -> CInt      $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CBool c)     s env = case c of
+    CData d -> CBool     $ CData d
+    CForm f -> CBool     $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CString c)   s env = case c of
+    CData d -> CString   $ CData d
+    CForm f -> CString   $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CTime c)     s env = case c of
+    CData d -> CTime     $ CData d
+    CForm f -> CTime     $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CWeekDay c)  s env = case c of
+    CData d -> CWeekDay  $ CData d
+    CForm f -> CWeekDay  $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CMonth c)    s env = case c of
+    CData d -> CMonth    $ CData d
+    CForm f -> CMonth    $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CDate c)     s env = case c of
+    CData d -> CDate     $ CData d
+    CForm f -> CDate     $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CDateTime c) s env = case c of
+    CData d -> CDateTime $ CData d
+    CForm f -> CDateTime $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CDuration c) s env = case c of
+    CData d -> CDuration $ CData d
+    CForm f -> CDuration $ CData $ evalF f s env
+tryEvalSpreadSheetCol (CPeriod c)   s env = case c of
+    CData d -> CPeriod   $ CData d
+    CForm f -> CPeriod   $ CData $ evalF f s env
+
 
 -- | Evaluate a whole spreadsheet and get the columns with only data
 evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetCol)]

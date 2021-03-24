@@ -58,6 +58,6 @@ data Formula a where
     IsLeapYear :: Formula Int  -> Formula Bool
     GetWeekDay :: Formula Date -> Formula WeekDay
     GetYearDay :: Formula Date -> Formula Int
-    MonthDays  :: Formula Int  -- ^ for information about leap years
-                  -> Formula Month
-                  -> Formula Int
+    MonthDays  :: Formula Int    -- ^ for information about leap years
+               -> Formula Month 
+               -> Formula Int 

@@ -11,6 +11,7 @@ import Data.List       (transpose,nub)
 import Text.Read       (readMaybe)
 import Data.Maybe      (isJust, fromJust)
 import Data.Hourglass
+import Data.TimeHelper
 
 -- | Checks if all lists are of the same length
 correctLn :: [[a]] -> Bool
@@ -52,6 +53,8 @@ inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intC
                       | isJust dateStCol     = CDate     $ CData $ map dtDate $ fromJust dateStCol
                       | isJust dateNbRCol    = CDate     $ CData $ map dtDate $ fromJust dateNbRCol
                       | isJust dateStRCol    = CDate     $ CData $ map dtDate $ fromJust dateStRCol
+                      | isJust periodCol     = CPeriod   $ CData $ fromJust periodCol
+                      | isJust durationCol   = CDuration $ CData $ fromJust durationCol
                       | otherwise            = CString   $ CData            tColumn
         where
             -- some parse attempts must come before other because of how timeParse works
@@ -79,7 +82,10 @@ inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intC
             dateNbRCol    = traverse (timeParse "YYYY-MM-DD")         tColumn
             -- date with month YYYY-Mon-DD
             dateStRCol    = traverse (timeParse "YYYY-Mon-DD")        tColumn
-            -- TODO: Add a way to parse duration and period from csv            
+            -- special period parse as "P Y:M:D"
+            periodCol     = traverse readPeriod                       tColumn
+            -- special duration parse as "D H:M:S:NS"
+            durationCol   = traverse readDuration                     tColumn
 
 
 colDataRelation :: [[String]] -> [String] -> Bool
