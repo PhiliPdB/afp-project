@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 module Data.Column where
 
 import Data.Formula (Formula)
@@ -19,21 +20,24 @@ instance (Show a) => Show (Column a) where
 data SpreadSheetCol = CInt    (Column Int)
                     | CBool   (Column Bool)
                     | CString (Column String)
+                    | CMInt   (Column (Maybe Int))
     deriving Show
 
 -- | Sum type for the possible column fields
 data ColField = FInt Int
               | FBool Bool
               | FString String
+              | FMInt (Maybe Int)
               | FForm           -- ^ Empty field for formula column
     deriving Show
 
 
 -- | Get the `Column` out of `SpreadSheetCol` based on the requested type
 getCol :: SpreadSheetCol -> Type a -> Column a
-getCol (CInt c)    TInt    = c
-getCol (CBool c)   TBool   = c
-getCol (CString c) TString = c
+getCol (CInt c)    TInt       = c
+getCol (CBool c)   TBool      = c
+getCol (CString c) TString    = c
+getCol (CMInt c)   TMInt      = c
 getCol _           _       = error "Requested wrong type"
 
 
@@ -47,6 +51,7 @@ tryAddField :: SpreadSheetCol -> ColField -> SpreadSheetCol
 tryAddField (CInt    (CData xs)) (FInt i)    = CInt    $ CData $ xs ++ [i]
 tryAddField (CBool   (CData xs)) (FBool b)   = CBool   $ CData $ xs ++ [b]
 tryAddField (CString (CData xs)) (FString s) = CString $ CData $ xs ++ [s]
+tryAddField (CMInt   (CData xs)) (FMInt s)   = CMInt   $ CData $ xs ++ [s]
 -- Match formula columns so they don't error
 tryAddField c@(CInt    (CForm _)) FForm = c
 tryAddField c@(CBool   (CForm _)) FForm = c
@@ -66,5 +71,6 @@ removeRow _ i | i < 0 = error "i >= 0"
 removeRow (CInt     (CData xs)) i = CInt    $ CData $ removeIth xs i
 removeRow (CBool    (CData xs)) i = CBool   $ CData $ removeIth xs i
 removeRow (CString  (CData xs)) i = CString $ CData $ removeIth xs i
+removeRow (CMInt    (CData xs)) i = CMInt   $ CData $ removeIth xs i
 -- Formula based columns cannot remove a row.
 removeRow s _ = s

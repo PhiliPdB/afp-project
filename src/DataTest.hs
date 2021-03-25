@@ -19,6 +19,8 @@ testIf = IfThenElse (Var "col4" inferType) (Var "col1" (inferType :: Type Int)) 
 plus1 :: Formula Int
 plus1 = Add (Var "col1" inferType) (Lit 1)
 
+fill :: Formula Int
+fill = Fill (Var "col5" inferType) (Var "col1" inferType)
 
 testSpreadSheet :: SpreadSheet
 testSpreadSheet = SpreadSheet 5
@@ -26,6 +28,7 @@ testSpreadSheet = SpreadSheet 5
     , ("col2", CInt  $ CData [51,52,53,54,55])
     , ("col3", CInt  $ CForm testFormula)
     , ("col4", CBool $ CData [True, False, True, False, True])
+    , ("col5", CMInt $ CData [Just 1, Just 2, Nothing, Nothing, Nothing])
     ]
 
 testCrossSpreadSheet :: SpreadSheet

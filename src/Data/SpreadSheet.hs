@@ -60,6 +60,11 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
           f (True,  x, _) = x
           f (False, _, y) = y
 
+evalF (Fill mi i) s env = zipWith f (evalF mi s env) (evalF i s env)
+    where f :: Maybe Int -> Int -> Int
+          f Nothing  i = i
+          f (Just x) _ = x 
+
 evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Something went wrong") $ do
         -- First we lookup the second table in the environment
         cTable <- M.lookup t env

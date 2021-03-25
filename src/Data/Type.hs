@@ -10,6 +10,7 @@ data Type a where
     TInt    :: Type Int
     TBool   :: Type Bool
     TString :: Type String
+    TMInt   :: Type (Maybe Int)
     TArray  :: Type a -> Type [a]
 
 -- | Common column-type functions
@@ -27,3 +28,6 @@ instance CT String where
 
 instance CT a => CT [a] where
     inferType = TArray inferType
+
+instance CT (Maybe Int) where
+    inferType = TMInt

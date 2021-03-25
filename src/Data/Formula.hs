@@ -33,6 +33,9 @@ data Formula a where
     -- Condition
     IfThenElse :: Formula Bool -> Formula a -> Formula a -> Formula a
 
+    -- Nullable
+    Fill       :: Formula (Maybe Int) -> Formula Int -> Formula Int
+    
 
     Aggr :: (CT a, CT b, CT c)
          => String                                   -- ^ Table name of the table we want to aggregate
