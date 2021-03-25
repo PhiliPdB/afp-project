@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1e7c261275dce79743fe7ee73e0dd1aa6193a0cc51863ac79190b227df82fc18
+-- hash: 937410d0868b6b7dd39f4270103bd56b0bcd06bcee550db9fff3e74da336f8c2
 
 name:           afp-project
 version:        0.1.0.0
@@ -35,7 +35,7 @@ library
       Export
       ReadCSV
   other-modules:
-      Paths_afp_project
+      Data.TimeHelper
   hs-source-dirs:
       src
   ghc-options: -Wall

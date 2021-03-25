@@ -30,8 +30,10 @@ ghc-options:
 
 library:
   source-dirs: src
+  other-modules:
+  - Data.TimeHelper
   dependencies:
-    - vector
+  - vector
 
 executables:
   afp-project-exe:

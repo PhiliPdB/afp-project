@@ -10,7 +10,7 @@ import qualified Data.Map as M
 import Data.Hourglass
 import Data.Maybe (fromJust)
 import ReadCSV
-import ShowCSV
+import Export
 
 
 testFormula :: Formula Int
@@ -32,7 +32,7 @@ testSpreadSheet = SpreadSheet 5
     , ("col5" , CTime     $ CData timeList)
     , ("col6" , CWeekDay  $ CData [Monday, Tuesday, Thursday, Friday, Sunday])
     , ("col5" , CTime     $ CData timeList) -- fails to export on Windows
-    , ("col6" , CWeekDay  $ CData [Monday, Tuesday, Thursday, Friday, Sunday]) 
+    , ("col6" , CWeekDay  $ CData [Monday, Tuesday, Thursday, Friday, Sunday])
     , ("col7" , CMonth    $ CData [March, April, May, June, July])
     , ("col8" , CDate     $ CData dateList) -- fails to export on Windows
     , ("col9" , CDateTime     $ CData dateTimeList) -- fails to export on Windows
@@ -47,7 +47,7 @@ testSpreadSheet = SpreadSheet 5
         periodList   = replicate 5 $ Period 110 6 27
 
 ---------------------------------------------------------------
-{- 
+{-
 The "fails to export on Windows" is related to timeParse using timeGetDateTimeOfDay, which uses
 dateTimeFromUnixEpochP, which then uses some functions that are most likely unix based.
 Futher investigations are needed.
