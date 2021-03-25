@@ -3,7 +3,7 @@ module Export
     )
 where
 
-import Data.SpreadSheet (SpreadSheet(..), SpreadSheetEnv, evalSpreadSheet)
+import Data.SpreadSheet (SpreadSheet(..), SpreadSheetEnv, evalSpreadSheet, SpreadSheetColumnData(..))
 import Data.Column (SpreadSheetCol(..), Column(CData))
 import Data.List (intercalate, transpose)
 
@@ -22,12 +22,10 @@ toCSVString env = unlines               -- Intercalate each row with a newline c
 toStringTable :: SpreadSheetEnv -> SpreadSheet -> [[String]]
 toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpreadSheet env
     where -- Function to print out a column that only contains data
-          showCol :: SpreadSheetCol -> [String]
-          showCol (CInt    (CData xs)) = map show xs
-          showCol (CBool   (CData xs)) = map show xs
-          showCol (CString (CData xs)) = map show xs
-          showCol _                    = error "Non-evaluated spreadsheet column"
-
+          showCol :: SpreadSheetColumnData -> [String]
+          showCol (DInt    xs) = map show xs
+          showCol (DBool   xs) = map show xs
+          showCol (DString xs) = map show xs
 
 -- | Given the spreadsheet env, convert a spreadsheet into a latex table string
 toLatex :: SpreadSheetEnv -> SpreadSheet -> String
@@ -47,4 +45,3 @@ latexTable (h:bs) = "\\begin{table}" ++ endline ++ "\\begin{tabular}" ++ colAlli
           body = intercalate ("\\\\" ++ endline) (map (intercalate "  &  ") bs) ++ endline
           colAllignment = "{" ++ intercalate "|" (map (const "c") [0..numCols]) ++ "}"
           numCols = length h
-

@@ -6,6 +6,8 @@ import Test.Tasty
 import Data.Maybe
 
 import Data.List
+import Unit
+
 
 column :: Int -> Gen SpreadSheetCol
 column nRows = oneof [
@@ -60,7 +62,7 @@ columnInsertion nRows nCols = do
 
 -- adding a new column preserves uniqueness property
 p3 :: SpreadSheet -> String -> Property
-p3 s@(SpreadSheet n cs) k = (nub (keys cs) == keys cs) ==> forAll (columnInsertion n (length cs)) p
+p3 s@(SpreadSheet n cs) k = forAll (columnInsertion n (length cs)) p
     where p :: (SpreadSheetCol, Int) -> Bool
           p (c, i) = let (SpreadSheet _ cs') = tryAddColumn s i (k, c) in keys cs' == nub (keys cs')
           numKeys :: String -> [(String, SpreadSheetCol)] -> Int
@@ -68,8 +70,39 @@ p3 s@(SpreadSheet n cs) k = (nub (keys cs) == keys cs) ==> forAll (columnInserti
           keys :: [(String, SpreadSheetCol)] -> [String]
           keys = map fst
 
+instance Arbitrary SpreadSheetCol where
+    arbitrary = do
+        nRows <- abs <$> arbitrary :: (Gen Int) 
+        column nRows
+
+-- UniformInput is required otherwise quickcheck discards too many cases where the input is not uniform in length
+newtype UniformInput = UI [(String, SpreadSheetCol)]
+    deriving Show
+
+instance Arbitrary UniformInput where
+    arbitrary = do
+        columnNames <- listOf (arbitrary :: (Gen String))
+        nRows <- abs <$> arbitrary :: (Gen Int)
+        columnData  <- vectorOf (length columnNames) (column nRows)
+        return $ UI (zip columnNames columnData)
+
+p4 :: UniformInput -> Property
+p4 (UI cs) = 
+    case spreadSheet cs of
+        Just (SpreadSheet 0 [])    -> property True
+        Just (SpreadSheet n (c:_)) -> property $ length c == n
+        Nothing                    -> property Discard -- discard if incorrect input
+
+p5 :: UniformInput -> Property
+p5 (UI cs) = 
+    case spreadSheet cs of
+        Just (SpreadSheet 0 [])  -> property True
+        Just (SpreadSheet n cs') -> property $ nub (names cs') == names cs'
+        Nothing                  -> property Discard -- discard if incorrect input
+    where names = map fst
+
 main :: IO ()
-main = defaultMain properties
+main = defaultMain (testGroup "Tests" [properties, unitTests])
 
 properties :: TestTree
 properties = testGroup "Properties" qcProps
@@ -81,5 +114,9 @@ qcProps =
         QC.testProperty "removing a row decreases row length variable"
                 Main.p2,
         QC.testProperty "adding a new column preserves uniqueness property"
-                Main.p3
+                Main.p3,
+        QC.testProperty "A spreadsheet constructed has a row length variable matching its first column length"
+                Main.p4,
+        QC.testProperty "A spreadsheet constructed has only unique columnNames"
+                Main.p5
     ]
