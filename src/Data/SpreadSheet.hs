@@ -9,14 +9,36 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.Hourglass
-import Data.List (findIndices)
+import Data.List (findIndices, nub)
 import Data.Type (Type)
 import Data.TimeHelper
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
--- TODO: Don't export the constructor
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
     deriving Show
+
+uniformLength :: [SpreadSheetCol] -> Bool
+uniformLength cs = 
+    case lengthOfCols of
+        [] -> True
+        (c:cs) -> all (==c) cs 
+  where 
+        lengthOfCols :: [Int]
+        lengthOfCols = foldl f [] cs
+        f :: [Int] -> SpreadSheetCol -> [Int] 
+        f is (CInt (CData d)) = length d : is
+        f is (CString (CData d)) = length d : is
+        f is (CBool (CData d)) = length d : is
+        f is  _ = is
+
+spreadSheet :: [(String, SpreadSheetCol)] -> Maybe SpreadSheet
+spreadSheet [] = Just $ SpreadSheet 0 []
+spreadSheet cs@(c:_) 
+    | hasUniqueColumnNames && uniformLength cols = Just $ SpreadSheet (length c) cs
+    | otherwise                                          = Nothing
+  where hasUniqueColumnNames = length (nub names) == length names
+        cols = map snd cs
+        names = map fst cs 
 
 -- | Collection of multiple spreadsheets
 --   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
@@ -108,45 +130,56 @@ evalF (GetYearDay d)  s env = map     getDayOfTheYear (evalF d s env)
 evalF (MonthDays y m) s env = zipWith daysInMonth     (evalF y s env) (evalF m s env)
 
 
--- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
---   Otherwise, just the data is returned. This function thus always
---   returns a `CData` column.
--- TODO: Remove code duplication if possible
-tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetCol
-tryEvalSpreadSheetCol (CInt c)      s env = case c of
-    CData d -> CInt      $ CData d
-    CForm f -> CInt      $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CBool c)     s env = case c of
-    CData d -> CBool     $ CData d
-    CForm f -> CBool     $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CString c)   s env = case c of
-    CData d -> CString   $ CData d
-    CForm f -> CString   $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CTime c)     s env = case c of
-    CData d -> CTime     $ CData d
-    CForm f -> CTime     $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CWeekDay c)  s env = case c of
-    CData d -> CWeekDay  $ CData d
-    CForm f -> CWeekDay  $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CMonth c)    s env = case c of
-    CData d -> CMonth    $ CData d
-    CForm f -> CMonth    $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CDate c)     s env = case c of
-    CData d -> CDate     $ CData d
-    CForm f -> CDate     $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CDateTime c) s env = case c of
-    CData d -> CDateTime $ CData d
-    CForm f -> CDateTime $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CDuration c) s env = case c of
-    CData d -> CDuration $ CData d
-    CForm f -> CDuration $ CData $ evalF f s env
-tryEvalSpreadSheetCol (CPeriod c)   s env = case c of
-    CData d -> CPeriod   $ CData d
-    CForm f -> CPeriod   $ CData $ evalF f s env
+data SpreadSheetColumnData = DInt      [Int]
+                           | DBool     [Bool]
+                           | DString   [String]
+                           | DTime     [TimeOfDay]
+                           | DWeekDay  [WeekDay]
+                           | DMonth    [Month]
+                           | DDate     [Date]
+                           | DDateTime [DateTime]
+                           | DDuration [Duration]
+                           | DPeriod   [Period]
+    deriving (Show, Eq, Ord)
 
+-- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
+--   Otherwise, just the data is returned. 
+-- TODO: Remove code duplication if possible
+
+tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetColumnData
+tryEvalSpreadSheetCol (CInt c)    s env = case c of
+    CData d -> DInt      d
+    CForm f -> DInt      $ evalF f s env
+tryEvalSpreadSheetCol (CBool c)   s env = case c of
+    CData d -> DBool     d
+    CForm f -> DBool     $ evalF f s env
+tryEvalSpreadSheetCol (CString c) s env = case c of
+    CData d -> DString   d
+    CForm f -> DString   $ evalF f s env
+tryEvalSpreadSheetCol (CTime c)     s env = case c of
+    CData d -> DTime     d
+    CForm f -> DTime     $ evalF f s env
+tryEvalSpreadSheetCol (CWeekDay c)  s env = case c of
+    CData d -> DWeekDay  d
+    CForm f -> DWeekDay  $ evalF f s env
+tryEvalSpreadSheetCol (CMonth c)    s env = case c of
+    CData d -> DMonth    d
+    CForm f -> DMonth    $ evalF f s env
+tryEvalSpreadSheetCol (CDate c)     s env = case c of
+    CData d -> DDate     d
+    CForm f -> DDate     $ evalF f s env
+tryEvalSpreadSheetCol (CDateTime c) s env = case c of
+    CData d -> DDateTime d
+    CForm f -> DDateTime $ evalF f s env
+tryEvalSpreadSheetCol (CDuration c) s env = case c of
+    CData d -> DDuration d
+    CForm f -> DDuration $ evalF f s env
+tryEvalSpreadSheetCol (CPeriod c)   s env = case c of
+    CData d -> DPeriod   d
+    CForm f -> DPeriod   $ evalF f s env
 
 -- | Evaluate a whole spreadsheet and get the columns with only data
-evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetCol)]
+evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetColumnData)]
 evalSpreadSheet s@(SpreadSheet _ cs) env = map eval cs
     where -- TODO: This could possibly lead to evaluating formulas twice
           eval (n, col) = (n, tryEvalSpreadSheetCol col s env)
