@@ -28,6 +28,10 @@ uniformLength cs =
         f is (CBool (CData d)) = length d : is
         f is  _ = is
 
+-- | Construct a SpreadSheet
+-- The function expects an associated list of column names paired with SpreadSheetCol
+-- The associated list must have unique keys, each SpreadSheetCol containing CData must have uniform length.
+-- Otherwise a Nothing is returned.
 spreadSheet :: [(String, SpreadSheetCol)] -> Maybe SpreadSheet
 spreadSheet [] = Just $ SpreadSheet 0 []
 spreadSheet cs@(c:_) 
@@ -116,7 +120,7 @@ evalF (Sum x) s env = map sum (evalF x s env)
 data SpreadSheetColumnData = DInt    [Int]
                            | DBool   [Bool]
                            | DString [String]
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq)
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. 
