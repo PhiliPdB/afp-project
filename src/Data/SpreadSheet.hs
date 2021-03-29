@@ -1,14 +1,17 @@
 {-# LANGUAGE GADTs #-}
 module Data.SpreadSheet where
 
+import Prelude hiding (LT, GT)
+
 import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
 import Data.Formula (Formula(..))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
+import Data.Hourglass
 import Data.List (findIndices, nub)
 import Data.Type (Type)
-
+import Data.TimeHelper
 
 -- | SpreadSheet is defined as list of columns /indexed/ on a column name
 data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
@@ -63,12 +66,18 @@ evalF (Lift a) (SpreadSheet n _) _ | length a == n = a
                                    | otherwise     = error "Length doesn't match"
 -- Equality
 evalF (Eq a b)   s env = zipWith (==) (evalF a s env) (evalF b s env)
+evalF (NEq a b)  s env = zipWith (/=) (evalF a s env) (evalF b s env)
 -- Arithmetic
 evalF (Prod a b) s env = zipWith (*)  (evalF a s env) (evalF b s env)
 evalF (Add  a b) s env = zipWith (+)  (evalF a s env) (evalF b s env)
 evalF (Sub  a b) s env = zipWith (-)  (evalF a s env) (evalF b s env)
 evalF (Min  a b) s env = zipWith min  (evalF a s env) (evalF b s env)
 evalF (Max  a b) s env = zipWith max  (evalF a s env) (evalF b s env)
+-- Ordering
+evalF (LT   a b) s env = zipWith (<)  (evalF a s env) (evalF b s env)
+evalF (LEq  a b) s env = zipWith (<=) (evalF a s env) (evalF b s env)
+evalF (GT   a b) s env = zipWith (>)  (evalF a s env) (evalF b s env)
+evalF (GEq  a b) s env = zipWith (>=) (evalF a s env) (evalF b s env)
 -- Boolean logic
 evalF (And a b)  s env = zipWith (&&) (evalF a s env) (evalF b s env)
 evalF (Or  a b)  s env = zipWith (||) (evalF a s env) (evalF b s env)
@@ -81,7 +90,6 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
 
           f (True,  x, _) = x
           f (False, _, y) = y
-
 evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Something went wrong") $ do
         -- First we lookup the second table in the environment
         cTable <- M.lookup t env
@@ -111,26 +119,64 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
                      CForm f -> return $ evalF f tab env
 
 evalF (Sum x) s env = map sum (evalF x s env)
+-- Time functions
+evalF (TimeAdd t d)   s env = zipWith timeAdd         (evalF t s env) (evalF d s env)
+evalF (TimeSub t d)   s env = zipWith timeAdd         (evalF t s env) (map invDur (evalF d s env))
+evalF (AddPeriod d p) s env = zipWith dateAddPeriod   (evalF d s env) (evalF p s env)
+evalF (SubPeriod d p) s env = zipWith dateAddPeriod   (evalF d s env) (map invPer (evalF p s env))
+evalF (IsLeapYear d)  s env = map     isLeapYear      (evalF d s env)
+evalF (GetWeekDay d)  s env = map     getWeekDay      (evalF d s env)
+evalF (GetYearDay d)  s env = map     getDayOfTheYear (evalF d s env)
+evalF (MonthDays y m) s env = zipWith daysInMonth     (evalF y s env) (evalF m s env)
 
 
-data SpreadSheetColumnData = DInt    [Int]
-                           | DBool   [Bool]
-                           | DString [String]
+data SpreadSheetColumnData = DInt      [Int]
+                           | DBool     [Bool]
+                           | DString   [String]
+                           | DTime     [TimeOfDay]
+                           | DWeekDay  [WeekDay]
+                           | DMonth    [Month]
+                           | DDate     [Date]
+                           | DDateTime [DateTime]
+                           | DDuration [Duration]
+                           | DPeriod   [Period]
     deriving (Show, Eq, Ord)
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. 
 -- TODO: Remove code duplication if possible
+
 tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetColumnData
 tryEvalSpreadSheetCol (CInt c)    s env = case c of
-    CData d -> DInt     d
-    CForm f -> DInt     $ evalF f s env
+    CData d -> DInt      d
+    CForm f -> DInt      $ evalF f s env
 tryEvalSpreadSheetCol (CBool c)   s env = case c of
-    CData d -> DBool    d
-    CForm f -> DBool    $ evalF f s env
+    CData d -> DBool     d
+    CForm f -> DBool     $ evalF f s env
 tryEvalSpreadSheetCol (CString c) s env = case c of
-    CData d -> DString  d
-    CForm f -> DString  $ evalF f s env
+    CData d -> DString   d
+    CForm f -> DString   $ evalF f s env
+tryEvalSpreadSheetCol (CTime c)     s env = case c of
+    CData d -> DTime     d
+    CForm f -> DTime     $ evalF f s env
+tryEvalSpreadSheetCol (CWeekDay c)  s env = case c of
+    CData d -> DWeekDay  d
+    CForm f -> DWeekDay  $ evalF f s env
+tryEvalSpreadSheetCol (CMonth c)    s env = case c of
+    CData d -> DMonth    d
+    CForm f -> DMonth    $ evalF f s env
+tryEvalSpreadSheetCol (CDate c)     s env = case c of
+    CData d -> DDate     d
+    CForm f -> DDate     $ evalF f s env
+tryEvalSpreadSheetCol (CDateTime c) s env = case c of
+    CData d -> DDateTime d
+    CForm f -> DDateTime $ evalF f s env
+tryEvalSpreadSheetCol (CDuration c) s env = case c of
+    CData d -> DDuration d
+    CForm f -> DDuration $ evalF f s env
+tryEvalSpreadSheetCol (CPeriod c)   s env = case c of
+    CData d -> DPeriod   d
+    CForm f -> DPeriod   $ evalF f s env
 
 -- | Evaluate a whole spreadsheet and get the columns with only data
 evalSpreadSheet :: SpreadSheet -> SpreadSheetEnv -> [(String, SpreadSheetColumnData)]
