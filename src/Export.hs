@@ -4,7 +4,6 @@ module Export
 where
 
 import Data.SpreadSheet (SpreadSheet(..), SpreadSheetEnv, evalSpreadSheet, SpreadSheetColumnData(..))
-import Data.Column (SpreadSheetCol(..), Column(CData))
 import Data.List (intercalate, transpose)
 import Data.Hourglass
 import Data.TimeHelper
@@ -25,6 +24,7 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
     where -- Function to print out a column that only contains data
         showCol :: SpreadSheetColumnData -> [String]
         showCol (DInt      xs) = map show xs
+        showCol (DFloat    xs) = map show xs
         showCol (DBool     xs) = map show xs
         showCol (DString   xs) = map show xs
         showCol (DTime     xs) = map (timePrint "H:MI:S" . DateTime defaultDate) xs
@@ -34,7 +34,6 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
         showCol (DDateTime xs) = map (timePrint "DD-MM-YYYY H:MI:S") xs
         showCol (DDuration xs) = map showDuration xs
         showCol (DPeriod   xs) = map showPeriod   xs
-        showCol _                      = error "Non-evaluated spreadsheet column"
         defaultDate = Date 1 January 1970
           -- TODO: Add a way to print duration and period to csv
 
