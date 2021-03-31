@@ -23,14 +23,17 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - split
+- hourglass
 
 ghc-options:
 - -Wall
 
 library:
   source-dirs: src
+  other-modules:
+  - Data.TimeHelper
   dependencies:
-    - vector
+  - vector
 
 executables:
   afp-project-exe:

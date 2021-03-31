@@ -11,6 +11,13 @@ packages:
       sha256: 72c550dd427dc15a2195e16c84bdb4712060fe601d87e95674154b44403550d9
   original:
     hackage: split-0.2.3.4
+- completed:
+    hackage: hourglass-0.2.12@sha256:e083f5e030dfebe432e30a9c0fa07a99a54eac992f622442646be561fd7a44e8,3085
+    pantry-tree:
+      size: 1605
+      sha256: 2b452cfac948057203679468e3e856e7fdf884c3c051f42bc52ba6253ca896e0
+  original:
+    hackage: hourglass-0.2.12
 snapshots:
 - completed:
     size: 563103
