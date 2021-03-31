@@ -23,7 +23,7 @@ unitTests = testGroup "Unit tests"
 
 test1 = evalSpreadSheet s env @?= [("col1", DInt [1..5])]
   where (Just s@(SpreadSheet _ cs)) = spreadSheet [("col1", CInt  $ CData [1..5])]
-        env = Data.Map.fromList [("S1", s)]
+        env = SpreadSheetEnv $ Data.Map.fromList [("S1", s)]
 
 testSpreadSheet :: SpreadSheet
 testSpreadSheet = SpreadSheet 5
@@ -35,7 +35,7 @@ testSpreadSheet = SpreadSheet 5
 
 test2 = evalSpreadSheet s env @?= expected
   where s@(SpreadSheet _ cs) = testSpreadSheet
-        env = Data.Map.fromList [("S1", testSpreadSheet)]
+        env = SpreadSheetEnv $ Data.Map.fromList [("S1", testSpreadSheet)]
         expected = [("col1", DInt [1..5]), ("col2", DInt [51..55]), ("col3", DInt [51, 104, 159, 216, 275]), ("col4", DBool [True, False, True, False, True])]
 
 
@@ -45,7 +45,7 @@ testCrossSpreadSheet = SpreadSheet 5
     ]
 
 testEnv :: SpreadSheetEnv
-testEnv = M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
+testEnv = SpreadSheetEnv $ M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
 
 test3 = evalSpreadSheet testCrossSpreadSheet testEnv
             @?= [("col1", DInt [51..55])]
