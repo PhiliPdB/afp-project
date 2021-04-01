@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8c137aa3c1b73b7a5af5998787c2bfbe552ae697b65d9e160f1f772ec351781b
+-- hash: 3c880a18281852d61972be457d7132d10d77cfef250da0789591d87386cea862
 
 name:           afp-project
 version:        0.1.0.0
@@ -54,7 +54,7 @@ test-suite afp-project-test
       Paths_afp_project
   hs-source-dirs:
       test
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -fno-warn-orphans
   build-depends:
       afp-project
     , base >=4.7 && <5
