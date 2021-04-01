@@ -49,8 +49,7 @@ testSpreadSheet = SpreadSheet 5
 ---------------------------------------------------------------
 {-
 The "fails to export on Windows" is related to timeParse using timeGetDateTimeOfDay, which uses
-dateTimeFromUnixEpochP, which then uses some functions that are most likely unix based.
-Futher investigations are needed.
+dateTimeFromUnixEpochP, which then uses some functions that are unix based.
 -}
 
 testCrossSpreadSheet :: SpreadSheet

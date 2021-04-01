@@ -6,6 +6,7 @@ import Data.Hourglass
 
 -- | Error message for problematic situations.
 newtype ErrMsg = ErrMsg String
+    deriving(Show)
 
 -- | Possible variable types
 data Type a where

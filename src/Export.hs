@@ -35,7 +35,6 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
         showCol (DDuration xs) = map showDuration xs
         showCol (DPeriod   xs) = map showPeriod   xs
         defaultDate = Date 1 January 1970
-          -- TODO: Add a way to print duration and period to csv
 
 -- | Given the spreadsheet env, convert a spreadsheet into a latex table string
 toLatex :: SpreadSheetEnv -> SpreadSheet -> String
@@ -44,6 +43,7 @@ toLatex env s = latexTable $ toStringTable env s
 endline :: String
 endline = "\n"
 
+-- | Helper function to structure the raw data in sting form to a latex table string
 latexTable :: [[String]] -> String
 latexTable []     = error "Cannot convert empty spreadsheet"
 latexTable (h:bs) = "\\begin{table}" ++ endline ++ "\\begin{tabular}" ++ colAllignment ++ endline
