@@ -57,24 +57,27 @@ spreadSheetEnv :: Map String SpreadSheet -> SpreadSheetEnv
 spreadSheetEnv = SpreadSheetEnv
 
 -- | Ensures the spreadsheet is valid and does not contain formula's referring to non-existent columns
-isValidSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Bool 
-isValidSpreadSheet (n, s) (SpreadSheetEnv env) = referredColumns s `S.isSubsetOf` existingColumns
+isValidSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Bool
+isValidSpreadSheet (name, spreadsheet) (SpreadSheetEnv env) = referredColumns spreadsheet `S.isSubsetOf` existingColumns
     where referredColumns :: SpreadSheet -> S.Set (String, String)
-          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap (g n . snd) cs
+          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap (g name . snd) cs
           -- finds referred columns in formula's (and pairs them with the spreadsheet name)
           g :: String -> SpreadSheetCol -> [(String, String)]
-          g s (CInt     (CForm f)) = colRefs s f 
-          g s (CBool    (CForm f)) = colRefs s f 
-          g s (CString  (CForm f)) = colRefs s f 
-          g s (CTime    (CForm f)) = colRefs s f
-          g s (CWeekDay (CForm f)) = colRefs s f 
-          g s (CMonth   (CForm f)) = colRefs s f    
-          g s (CDate    (CForm f)) = colRefs s f
-          g s (CDateTime (CForm f)) = colRefs s f    
-          g s (CDuration (CForm f)) = colRefs s f    
-          g s (CPeriod  (CForm f)) = colRefs s f
-          g _ _                          = []
-          newEnv = M.insert n s env 
+          g s (CInt      (CForm f)) = colRefs s f
+          g s (CFloat    (CForm f)) = colRefs s f
+          g s (CBool     (CForm f)) = colRefs s f
+          g s (CString   (CForm f)) = colRefs s f
+          g s (CTime     (CForm f)) = colRefs s f
+          g s (CWeekDay  (CForm f)) = colRefs s f
+          g s (CMonth    (CForm f)) = colRefs s f
+          g s (CDate     (CForm f)) = colRefs s f
+          g s (CDateTime (CForm f)) = colRefs s f
+          g s (CDuration (CForm f)) = colRefs s f
+          g s (CPeriod   (CForm f)) = colRefs s f
+          g _ _                     = []
+
+          newEnv = M.insert name spreadsheet env
+
           existingColumns :: S.Set (String, String)
           existingColumns = S.fromList $ concatMap (\(n, SpreadSheet _ cs) -> map ((n,) . fst) cs) (M.assocs newEnv)
 
@@ -82,7 +85,7 @@ isValidSpreadSheet (n, s) (SpreadSheetEnv env) = referredColumns s `S.isSubsetOf
 -- If the spreadsheet name already exists, or the spreadsheet refers to non-existing spreadsheets in
 -- its formula's, a Nothing is returned.
 addSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Maybe SpreadSheetEnv
-addSpreadSheet (n, s) env@(SpreadSheetEnv envMap) 
+addSpreadSheet (n, s) env@(SpreadSheetEnv envMap)
                 | isJust (M.lookup n envMap) = Nothing
                 | isValidSpreadSheet (n, s) env = Just (SpreadSheetEnv $ M.insert n s envMap)
                 | otherwise = Nothing
