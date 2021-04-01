@@ -87,7 +87,7 @@ inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intC
             -- special duration parse as "D H:M:S:NS"
             durationCol   = traverse readDuration                     tColumn
 
-
+-- | Checks if the column names match up with the non empty data columns
 colDataRelation :: [[String]] -> [String] -> Bool
 colDataRelation dataCol names = all (\(a,b) -> a == b) boolPairs
     where
@@ -131,12 +131,13 @@ importCSV fPath sep takeNames= do
                         return $ safetyFilter rawData takeNames
 
 
--- There is one glitch connected to having the , sign as value in a column.
--- In this case it is writen as "," in the csv, but importCSV will read it
--- as two " signs separetad with.
+-- There is one glitch connected to having the separator sign
+-- as a value in a cell, in this case the import will most likely
+-- fail, or succed to import if such a cell occurs the same amount
+-- of times in every row.
 
--- temporary testing tools
-getColVal []                         = []
+-- special testing tools, uncomment to use
+{- getColVal []                         = []
 getColVal ((_,CInt     (CData x)):xs) = show x ++ getColVal xs
 getColVal ((_,CBool    (CData x)):xs) = show x ++ getColVal xs
 getColVal ((_,CMonth   (CData x)):xs) = show x ++ getColVal xs
@@ -154,4 +155,4 @@ getSpShSize (Right (SpreadSheet n _)) = n
 getSpShSize (Left _)                  = -1
 
 checkImportOutcome (Left (ErrMsg msg)) = [msg]
-checkImportOutcome (Right spsh)        = getColNames (getInnerList spsh) ++ [getColVal (getInnerList spsh)]
+checkImportOutcome (Right spsh)        = getColNames (getInnerList spsh) ++ [getColVal (getInnerList spsh)] -}
