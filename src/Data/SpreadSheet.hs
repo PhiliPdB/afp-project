@@ -1,13 +1,15 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TupleSections #-}
 module Data.SpreadSheet where
 
 import Prelude hiding (LT, GT)
 
 import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
-import Data.Formula (Formula(..))
+import Data.Formula (Formula(..), colRefs)
 import Data.Map (Map)
+import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
+import Data.Maybe (isJust, fromMaybe)
 import Data.Hourglass
 import Data.List (findIndices, nub)
 import Data.Type (Type)
@@ -45,9 +47,48 @@ spreadSheet cs@(c:_)
         names = map fst cs
 
 -- | Collection of multiple spreadsheets
---   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
-type SpreadSheetEnv = Map String SpreadSheet
+--   TODO: Might want to add a function to remove spreadsheets.
+--         Check whether any removal invalidates the spreadsheet env
+--         for instance don't remove spreadsheets that are referred to.
+newtype SpreadSheetEnv = SpreadSheetEnv (Map String SpreadSheet)
 
+-- | Constructs a SpreadSheet environment from a Map of spreadsheet names and spreadsheets
+spreadSheetEnv :: Map String SpreadSheet -> SpreadSheetEnv
+spreadSheetEnv = SpreadSheetEnv
+
+-- | Ensures the spreadsheet is valid and does not contain formula's referring to non-existent columns
+isValidSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Bool
+isValidSpreadSheet (name, spreadsheet) (SpreadSheetEnv env) = referredColumns spreadsheet `S.isSubsetOf` existingColumns
+    where referredColumns :: SpreadSheet -> S.Set (String, String)
+          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap (g name . snd) cs
+          -- finds referred columns in formula's (and pairs them with the spreadsheet name)
+          g :: String -> SpreadSheetCol -> [(String, String)]
+          g s (CInt      (CForm f)) = colRefs s f
+          g s (CFloat    (CForm f)) = colRefs s f
+          g s (CBool     (CForm f)) = colRefs s f
+          g s (CString   (CForm f)) = colRefs s f
+          g s (CTime     (CForm f)) = colRefs s f
+          g s (CWeekDay  (CForm f)) = colRefs s f
+          g s (CMonth    (CForm f)) = colRefs s f
+          g s (CDate     (CForm f)) = colRefs s f
+          g s (CDateTime (CForm f)) = colRefs s f
+          g s (CDuration (CForm f)) = colRefs s f
+          g s (CPeriod   (CForm f)) = colRefs s f
+          g _ _                     = []
+
+          newEnv = M.insert name spreadsheet env
+
+          existingColumns :: S.Set (String, String)
+          existingColumns = S.fromList $ concatMap (\(n, SpreadSheet _ cs) -> map ((n,) . fst) cs) (M.assocs newEnv)
+
+-- | Add a (name, SpreadSheet) pair to the spreadsheet environment.
+-- If the spreadsheet name already exists, or the spreadsheet refers to non-existing spreadsheets in
+-- its formula's, a Nothing is returned.
+addSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Maybe SpreadSheetEnv
+addSpreadSheet (n, s) env@(SpreadSheetEnv envMap)
+                | isJust (M.lookup n envMap) = Nothing
+                | isValidSpreadSheet (n, s) env = Just (SpreadSheetEnv $ M.insert n s envMap)
+                | otherwise = Nothing
 
 -- | Evaluate a given formula on a given spreadsheet
 evalF :: Formula a -> SpreadSheet -> SpreadSheetEnv -> [a]
@@ -56,8 +97,8 @@ evalF (Var x t) s@(SpreadSheet _ cs) env = case lookup x cs of
         CData v -> v
         CForm f -> evalF f s env
     Nothing -> error $ "No column with name '" ++ x ++ "'"
-evalF (CTVar tn cn t) (SpreadSheet n _) env = fromMaybe (error "Table or column not found") $ do
-    table@(SpreadSheet m cs) <- M.lookup tn env
+evalF (CTVar tn cn t) (SpreadSheet n _) env@(SpreadSheetEnv envMap) = fromMaybe (error "Table or column not found") $ do
+    table@(SpreadSheet m cs) <- M.lookup tn envMap
     if m < n then -- Check if the column in the other table is big enough
         error $ "Table '" ++ tn ++ "' doesn't have enough rows"
     else do
@@ -94,9 +135,9 @@ evalF (IfThenElse c a b) s env = map f (zip3 c' a' b')
 
           f (True,  x, _) = x
           f (False, _, y) = y
-evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Something went wrong") $ do
+evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env@(SpreadSheetEnv envMap) = fromMaybe (error "Something went wrong") $ do
         -- First we lookup the second table in the environment
-        cTable <- M.lookup t env
+        cTable <- M.lookup t envMap
         -- Get the data from all the columns
         c1data <- getData c1 t1 cTable
         c2data <- getData c2 t2  table
@@ -107,7 +148,7 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
         -- of the items in c1 together.
 
         -- Helper function to find the indeces in c1 where the condition compared to b holds.
-        let findIndecesInC1 b = findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) M.empty)) c1data
+        let findIndecesInC1 b = findIndices (\a -> head (evalF (cond (Lit a) (Lit b)) (SpreadSheet 1 []) (SpreadSheetEnv M.empty))) c1data
         -- Find the indeces for each item in c2data
         let c2aggr = map findIndecesInC1 c2data
         -- With these indeces collected, we can map them to the corresponding data in c3.

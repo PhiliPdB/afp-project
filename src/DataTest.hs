@@ -59,11 +59,11 @@ testCrossSpreadSheet = SpreadSheet 4
     ]
 
 testEnv :: SpreadSheetEnv
-testEnv = M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
+testEnv = SpreadSheetEnv $ M.fromList [("main", testSpreadSheet), ("secondary", testCrossSpreadSheet)]
 
 
 testAggr :: SpreadSheetEnv
-testAggr = M.fromList
+testAggr = SpreadSheetEnv $ M.fromList
     [ ("form", SpreadSheet 5
         [ ("item", CInt $ CData [1,2,3,4,5])
         , ("form", CInt $ CForm $ Aggr "data" "count" (inferType :: Type Int) "item" inferType "price" inferType Eq Sum)
@@ -77,4 +77,5 @@ testAggr = M.fromList
     ]
 
 testForm :: SpreadSheet
-testForm = fromJust $ M.lookup "form" testAggr
+testForm = fromJust $ M.lookup "form" testAggrMap
+  where (SpreadSheetEnv testAggrMap) = testAggr
