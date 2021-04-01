@@ -1,11 +1,13 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TupleSections #-}
 module Data.SpreadSheet where
 
 import Prelude hiding (LT, GT)
 
 import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
-import Data.Formula (Formula(..))
+import Data.Formula (Formula(..), colRefs)
 import Data.Map (Map)
+import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.Hourglass
@@ -43,6 +45,32 @@ spreadSheet cs@(c:_)
 -- | Collection of multiple spreadsheets
 --   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
 newtype SpreadSheetEnv = SpreadSheetEnv (Map String SpreadSheet)
+
+-- | Constructs a SpreadSheet environment from a Map of spreadsheet names and spreadsheets
+spreadSheetEnv :: Map String SpreadSheet -> SpreadSheetEnv
+spreadSheetEnv = SpreadSheetEnv
+
+-- | Ensures the spreadsheet is valid and does not contain formula's referring to non-existent columns
+isValidSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Bool 
+isValidSpreadSheet (n, s) (SpreadSheetEnv env) = (referredColumns s) `S.isSubsetOf` existingColumns
+    where referredColumns :: SpreadSheet -> S.Set (String, String)
+          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap ((g n) . snd) cs
+          -- finds referred columns in formula's
+          g :: String -> SpreadSheetCol -> [(String, String)]
+          g s (CInt     (CForm f)) = colRefs s f 
+          g s (CBool    (CForm f)) = colRefs s f 
+          g s (CString  (CForm f)) = colRefs s f 
+          g s (CTime    (CForm f)) = colRefs s f
+          g s (CWeekDay (CForm f)) = colRefs s f 
+          g s (CMonth   (CForm f)) = colRefs s f    
+          g s (CDate    (CForm f)) = colRefs s f
+          g s (CDateTime (CForm f)) = colRefs s f    
+          g s (CDuration (CForm f)) = colRefs s f    
+          g s (CPeriod  (CForm f)) = colRefs s f
+          g _ _                          = []
+          newEnv = M.insert n s env 
+          existingColumns :: S.Set (String, String)
+          existingColumns = S.fromList $ concatMap (\(n, (SpreadSheet _ cs)) -> map (((n,) . fst)) cs) (M.assocs newEnv)
 
 
 -- | Evaluate a given formula on a given spreadsheet

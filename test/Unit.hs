@@ -18,6 +18,14 @@ unitTests = testGroup "Unit tests"
       test2
   , testCase "Evaluating spreadsheet with a cross table column"
       test3
+  , testCase "validating correct (non cross formula) spreadsheet in empty env"
+      testIsValidSpreadSheet
+  , testCase "validating incorrect (non cross formula) spreadsheet in empty env"
+      testInvalidSpreadSheet
+  , testCase "validating cross formula spreadSheet in env with referred columns"
+     testIsValidCrossSpreadSheet
+  , testCase "validating cross formula spreadsheet in env without referred columns"
+     testInvalidCrossSpreadSheet
   ]
 
 
@@ -51,5 +59,25 @@ test3 = evalSpreadSheet testCrossSpreadSheet testEnv
             @?= [("col1", DInt [51..55])]
 
 
+testIsValidSpreadSheet = isValidSpreadSheet ("main", testSpreadSheet) (SpreadSheetEnv M.empty) @?= True
 
+testInvalidSpreadSheet = not (isValidSpreadSheet ("main", invalidSpreadSheet) (SpreadSheetEnv M.empty)) @?= True
+    where invalidSpreadSheet = 
+            SpreadSheet 5
+                [ ("col1", CInt  $ CData [1,2,3,4,5])
+                , ("col2", CInt  $ CData [51,52,53,54,55])
+                , ("col3", CInt  $ CForm $ Prod (Var "col5" inferType) (Var "col2" inferType))
+                , ("col4", CBool $ CData [True, False, True, False, True])
+                ]
 
+testIsValidCrossSpreadSheet = isValidSpreadSheet ("secondary", testCrossSpreadSheet) env @?= True
+    where env = SpreadSheetEnv (M.fromList [("main", testSpreadSheet)])
+
+testInvalidCrossSpreadSheet = isValidSpreadSheet ("secondary", testCrossSpreadSheet) env @?= False
+    where env = SpreadSheetEnv (M.fromList [("main", testSpreadSheet)])
+          testSpreadSheet 
+            = SpreadSheet 5
+                [ ("col1", CInt  $ CData [1,2,3,4,5])
+                , ("col3", CInt  $ CForm $ Prod (Var "col1" inferType) (Var "col1" inferType))
+                , ("col4", CBool $ CData [True, False, True, False, True])
+                ]

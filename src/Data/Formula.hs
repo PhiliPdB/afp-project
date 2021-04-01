@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 module Data.Formula where
+import Prelude hiding (LT, GT)
 
 import Data.Type (Type, CT)
 import Data.Hourglass
@@ -61,3 +62,35 @@ data Formula a where
     MonthDays  :: Formula Int    -- ^ for information about leap years
                -> Formula Month 
                -> Formula Int 
+
+-- | Given the name of the current column,
+-- Returns all references to other (table, column) within the formula
+colRefs :: String -> Formula a -> [(String, String)]
+colRefs c (Var s _)          = [(c, s)]
+colRefs _ (CTVar fc s _)     = [(fc, s)]
+colRefs c (Eq x y)           = colRefs c x ++ colRefs c y
+colRefs c (NEq x y)          = colRefs c x ++ colRefs c y
+colRefs c (Prod x y)         = colRefs c x ++ colRefs c y
+colRefs c (Add x y)          = colRefs c x ++ colRefs c y
+colRefs c (Sub x y)          = colRefs c x ++ colRefs c y
+colRefs c (Min x y)          = colRefs c x ++ colRefs c y
+colRefs c (Max x y)          = colRefs c x ++ colRefs c y
+colRefs c (LT x y)           = colRefs c x ++ colRefs c y
+colRefs c (GT x y)           = colRefs c x ++ colRefs c y
+colRefs c (GEq x y)          = colRefs c x ++ colRefs c y
+colRefs c (LEq x y)          = colRefs c x ++ colRefs c y
+colRefs c (And x y)          = colRefs c x ++ colRefs c y
+colRefs c (Or x y)           = colRefs c x ++ colRefs c y
+colRefs c (Not x)            = colRefs c x 
+colRefs c (And x y)          = colRefs c x ++ colRefs c y
+colRefs c (IfThenElse x y z) = colRefs c x ++ colRefs c y ++ colRefs c z 
+colRefs c (Sum x)            = colRefs c x
+colRefs c (TimeAdd x y)      = colRefs c x ++ colRefs c y
+colRefs c (AddPeriod x y)    = colRefs c x ++ colRefs c y
+colRefs c (SubPeriod x y)    = colRefs c x ++ colRefs c y
+colRefs c (IsLeapYear x )    = colRefs c x 
+colRefs c (GetWeekDay x)     = colRefs c x 
+colRefs c (GetYearDay x )    = colRefs c x
+colRefs c (MonthDays x y)    = colRefs c x ++ colRefs c y
+
+-- f c (Aggr )
