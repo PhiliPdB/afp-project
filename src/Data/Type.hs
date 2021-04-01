@@ -10,6 +10,7 @@ newtype ErrMsg = ErrMsg String
 -- | Possible variable types
 data Type a where
     TInt      :: Type Int
+    TFloat    :: Type Double
     TBool     :: Type Bool
     TString   :: Type String
     TArray    :: Type a -> Type [a]
@@ -27,6 +28,9 @@ class CT a where
 
 instance CT Int where
     inferType = TInt
+
+instance CT Double where
+    inferType = TFloat
 
 instance CT Bool where
     inferType = TBool

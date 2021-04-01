@@ -49,7 +49,12 @@ data Formula a where
          -> (Formula [c] -> Formula d)               -- ^ Aggregation function to map the values to a single value
          -> Formula d
 
-    Sum :: Formula [Int] -> Formula Int
+    -- Aggregator functions
+    Filter  :: CT a => (a -> Bool) -> Formula [a] -> Formula [a]
+    Sum     :: Num a => Formula [a] -> Formula a
+    Average :: Formula [Double] -> Formula Double
+    Length  :: CT a => Formula [a] -> Formula Int
+
     -- Time functions
     TimeAdd    :: Time t => Formula t -> Formula Duration -> Formula t
     TimeSub    :: Time t => Formula t -> Formula Duration -> Formula t
@@ -59,5 +64,8 @@ data Formula a where
     GetWeekDay :: Formula Date -> Formula WeekDay
     GetYearDay :: Formula Date -> Formula Int
     MonthDays  :: Formula Int    -- ^ for information about leap years
-               -> Formula Month 
-               -> Formula Int 
+               -> Formula Month
+               -> Formula Int
+
+    ToInt   :: Formula Double -> Formula Int
+    ToFloat :: Formula Int    -> Formula Double

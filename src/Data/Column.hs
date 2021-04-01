@@ -18,6 +18,7 @@ instance (Show a) => Show (Column a) where
 
 -- | Supported SpreadSheet columns
 data SpreadSheetCol = CInt      (Column Int)
+                    | CFloat    (Column Double)
                     | CBool     (Column Bool)
                     | CString   (Column String)
                     | CTime     (Column TimeOfDay)
@@ -31,6 +32,7 @@ data SpreadSheetCol = CInt      (Column Int)
 
 -- | Sum type for the possible column fields
 data ColField = FInt      Int
+              | FFloat    Double
               | FBool     Bool
               | FString   String
               | FTime     TimeOfDay
@@ -47,6 +49,7 @@ data ColField = FInt      Int
 -- | Get the `Column` out of `SpreadSheetCol` based on the requested type
 getCol :: SpreadSheetCol -> Type a -> Column a
 getCol (CInt c)      TInt      = c
+getCol (CFloat c)    TFloat    = c
 getCol (CBool c)     TBool     = c
 getCol (CString c)   TString   = c
 getCol (CTime c)     TTime     = c
@@ -67,6 +70,7 @@ Functions for updating rows
 tryAddField :: SpreadSheetCol -> ColField -> SpreadSheetCol
 -- Expand data columns
 tryAddField (CInt      (CData xs)) (FInt i)      = CInt      $ CData $ xs ++ [i]
+tryAddField (CFloat    (CData xs)) (FFloat f)    = CFloat    $ CData $ xs ++ [f]
 tryAddField (CBool     (CData xs)) (FBool b)     = CBool     $ CData $ xs ++ [b]
 tryAddField (CString   (CData xs)) (FString s)   = CString   $ CData $ xs ++ [s]
 tryAddField (CTime     (CData xs)) (FTime t)     = CTime     $ CData $ xs ++ [t]
@@ -78,6 +82,7 @@ tryAddField (CDuration (CData xs)) (FDuration d) = CDuration $ CData $ xs ++ [d]
 tryAddField (CPeriod   (CData xs)) (FPeriod p)   = CPeriod   $ CData $ xs ++ [p]
 -- Match formula columns so they don't error
 tryAddField c@(CInt      (CForm _)) FForm = c
+tryAddField c@(CFloat    (CForm _)) FForm = c
 tryAddField c@(CBool     (CForm _)) FForm = c
 tryAddField c@(CString   (CForm _)) FForm = c
 tryAddField c@(CTime     (CForm _)) FForm = c
@@ -93,13 +98,14 @@ tryAddField _                    _           = error "Couldn't match column data
 
 removeIth :: [a] -> Int -> [a]
 removeIth []     _ = []
-removeIth (x:xs) i 
+removeIth (x:xs) i
     | i < 0      = xs
     | otherwise  = x : removeIth xs (i - 1)
 
 removeRow :: SpreadSheetCol -> Int -> SpreadSheetCol
 removeRow _ i | i < 0 = error "i >= 0"
 removeRow (CInt      (CData xs)) i = CInt      $ CData $ removeIth xs i
+removeRow (CFloat    (CData xs)) i = CFloat    $ CData $ removeIth xs i
 removeRow (CBool     (CData xs)) i = CBool     $ CData $ removeIth xs i
 removeRow (CString   (CData xs)) i = CString   $ CData $ removeIth xs i
 removeRow (CTime     (CData xs)) i = CTime     $ CData $ removeIth xs i

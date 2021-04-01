@@ -18,14 +18,14 @@ data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
     deriving Show
 
 uniformLength :: [SpreadSheetCol] -> Bool
-uniformLength cs = 
+uniformLength cs =
     case lengthOfCols of
         [] -> True
-        (c:cs) -> all (==c) cs 
-  where 
+        (c:cs) -> all (==c) cs
+  where
         lengthOfCols :: [Int]
         lengthOfCols = foldl f [] cs
-        f :: [Int] -> SpreadSheetCol -> [Int] 
+        f :: [Int] -> SpreadSheetCol -> [Int]
         f is (CInt (CData d)) = length d : is
         f is (CString (CData d)) = length d : is
         f is (CBool (CData d)) = length d : is
@@ -37,12 +37,12 @@ uniformLength cs =
 -- Otherwise a Nothing is returned.
 spreadSheet :: [(String, SpreadSheetCol)] -> Maybe SpreadSheet
 spreadSheet [] = Just $ SpreadSheet 0 []
-spreadSheet cs@(c:_) 
+spreadSheet cs@(c:_)
     | hasUniqueColumnNames && uniformLength cols = Just $ SpreadSheet (length c) cs
     | otherwise                                          = Nothing
   where hasUniqueColumnNames = length (nub names) == length names
         cols = map snd cs
-        names = map fst cs 
+        names = map fst cs
 
 -- | Collection of multiple spreadsheets
 --   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
@@ -122,7 +122,11 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
                      CData v -> return v
                      CForm f -> return $ evalF f tab env
 
-evalF (Sum x) s env = map sum (evalF x s env)
+evalF (Filter f x) s env = map (filter f) (evalF x s env)
+evalF (Sum x)      s env = map sum (evalF x s env)
+evalF (Average x)  s env = map average (evalF x s env)
+    where average xs = sum xs / fromIntegral (length xs)
+evalF (Length x)   s env = map length (evalF x s env)
 
 -- Time functions
 evalF (TimeAdd t d)   s env = zipWith timeAdd         (evalF t s env) (evalF d s env)
@@ -134,8 +138,12 @@ evalF (GetWeekDay d)  s env = map     getWeekDay      (evalF d s env)
 evalF (GetYearDay d)  s env = map     getDayOfTheYear (evalF d s env)
 evalF (MonthDays y m) s env = zipWith daysInMonth     (evalF y s env) (evalF m s env)
 
+evalF (ToInt f)   s env = map round        (evalF f s env)
+evalF (ToFloat i) s env = map fromIntegral (evalF i s env)
+
 
 data SpreadSheetColumnData = DInt      [Int]
+                           | DFloat    [Double]
                            | DBool     [Bool]
                            | DString   [String]
                            | DTime     [TimeOfDay]
@@ -148,13 +156,15 @@ data SpreadSheetColumnData = DInt      [Int]
     deriving (Show, Eq)
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
---   Otherwise, just the data is returned. 
+--   Otherwise, just the data is returned.
 -- TODO: Remove code duplication if possible
-
 tryEvalSpreadSheetCol :: SpreadSheetCol -> SpreadSheet -> SpreadSheetEnv -> SpreadSheetColumnData
 tryEvalSpreadSheetCol (CInt c)    s env = case c of
     CData d -> DInt      d
     CForm f -> DInt      $ evalF f s env
+tryEvalSpreadSheetCol (CFloat c)  s env = case c of
+    CData d -> DFloat    d
+    CForm f -> DFloat    $ evalF f s env
 tryEvalSpreadSheetCol (CBool c)   s env = case c of
     CData d -> DBool     d
     CForm f -> DBool     $ evalF f s env

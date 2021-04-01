@@ -40,6 +40,7 @@ safetyFilter rawData takeNames
 --   with correct type.
 inferDataType :: [String] -> SpreadSheetCol
 inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intCol
+                      | isJust floatCol      = CFloat    $ CData $ fromJust floatCol
                       | isJust boolCol       = CBool     $ CData $ fromJust boolCol
                       | isJust monthCol      = CMonth    $ CData $ fromJust monthCol
                       | isJust dayCol        = CWeekDay  $ CData $ fromJust dayCol
@@ -59,6 +60,7 @@ inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intC
         where
             -- some parse attempts must come before other because of how timeParse works
             intCol        = sequenceA (map readMaybe tColumn :: [Maybe Int])
+            floatCol      = sequenceA (map readMaybe tColumn :: [Maybe Double])
             boolCol       = sequenceA (map readMaybe tColumn :: [Maybe Bool])
             monthCol      = sequenceA (map readMaybe tColumn :: [Maybe Month])
             dayCol        = sequenceA (map readMaybe tColumn :: [Maybe WeekDay])
@@ -71,7 +73,7 @@ inferDataType tColumn | isJust intCol        = CInt      $ CData $ fromJust intC
             -- date-time in short num DD-MM-YYYY HH:MM
             dateTimeLnCol = traverse (timeParse "DD-MM-YYYY H:MI")    tColumn
             -- date-time with month long DD-Mon-YYYY HH:MM:SS
-            dateTimeSLCol = traverse (timeParse "DD-Mon-YYYY H:MI:S") tColumn            
+            dateTimeSLCol = traverse (timeParse "DD-Mon-YYYY H:MI:S") tColumn
             -- date-time with month short DD-Mon-YYYY HH:MM
             dateTimeSSCol = traverse (timeParse "DD-Mon-YYYY H:MI")   tColumn
             -- date in num     DD-MM-YYYY
