@@ -19,7 +19,7 @@ column nRows = oneof [
 instance Arbitrary SpreadSheet where
     arbitrary = do
         nRows <- abs <$> arbitrary :: (Gen Int)
-        nCols <- abs <$> arbitrary :: (Gen Int) 
+        nCols <- abs <$> arbitrary :: (Gen Int)
         columnNames <- vectorOf nCols (arbitrary :: (Gen String))
         columnData  <- vectorOf nCols (column nRows)
         -- entries with duplicate columnNames must be resolved
@@ -72,7 +72,7 @@ uniqueColumnProperty s@(SpreadSheet n cs) k = forAll (columnInsertion n (length 
 
 instance Arbitrary SpreadSheetCol where
     arbitrary = do
-        nRows <- abs <$> arbitrary :: (Gen Int) 
+        nRows <- abs <$> arbitrary :: (Gen Int)
         column nRows
 
 -- UniformInput is required otherwise quickcheck discards too many cases where the input is not uniform in length
@@ -88,19 +88,19 @@ instance Arbitrary UniformInput where
 
 -- A spreadsheet constructed has a row length variable matching its first column length
 spreadSheetRowLengthProperty :: UniformInput -> Property
-spreadSheetRowLengthProperty (UI cs) = 
+spreadSheetRowLengthProperty (UI cs) =
     case spreadSheet cs of
-        Just (SpreadSheet 0 [])    -> property True
-        Just (SpreadSheet n (c:_)) -> property $ length c == n
-        Nothing                    -> property Discard -- discard if incorrect input
+        Just (SpreadSheet _n [])    -> property True
+        Just (SpreadSheet  n (c:_)) -> property $ length c == n
+        Nothing                     -> property Discard -- discard if incorrect input
 
 -- A spreadsheet constructed has only unique columnNames
 spreadSheetUniqueColumnNamesProperty :: UniformInput -> Property
-spreadSheetUniqueColumnNamesProperty (UI cs) = 
+spreadSheetUniqueColumnNamesProperty (UI cs) =
     case spreadSheet cs of
-        Just (SpreadSheet 0 [])  -> property True
-        Just (SpreadSheet n cs') -> property $ nub (names cs') == names cs'
-        Nothing                  -> property Discard -- discard if incorrect input
+        Just (SpreadSheet  0 [])  -> property True
+        Just (SpreadSheet _n cs') -> property $ nub (names cs') == names cs'
+        Nothing                   -> property Discard -- discard if incorrect input
     where names = map fst
 
 main :: IO ()
@@ -109,6 +109,7 @@ main = defaultMain (testGroup "Tests" [properties, unitTests])
 properties :: TestTree
 properties = testGroup "Properties" qcProps
 
+qcProps :: [TestTree]
 qcProps =
     [
         QC.testProperty "adding a row increases row length variable"
