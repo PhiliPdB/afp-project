@@ -52,10 +52,10 @@ spreadSheetEnv = SpreadSheetEnv
 
 -- | Ensures the spreadsheet is valid and does not contain formula's referring to non-existent columns
 isValidSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Bool 
-isValidSpreadSheet (n, s) (SpreadSheetEnv env) = (referredColumns s) `S.isSubsetOf` existingColumns
+isValidSpreadSheet (n, s) (SpreadSheetEnv env) = referredColumns s `S.isSubsetOf` existingColumns
     where referredColumns :: SpreadSheet -> S.Set (String, String)
-          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap ((g n) . snd) cs
-          -- finds referred columns in formula's
+          referredColumns (SpreadSheet _ cs) = S.fromList $ concatMap (g n . snd) cs
+          -- finds referred columns in formula's (and pairs them with the spreadsheet name)
           g :: String -> SpreadSheetCol -> [(String, String)]
           g s (CInt     (CForm f)) = colRefs s f 
           g s (CBool    (CForm f)) = colRefs s f 
@@ -70,8 +70,12 @@ isValidSpreadSheet (n, s) (SpreadSheetEnv env) = (referredColumns s) `S.isSubset
           g _ _                          = []
           newEnv = M.insert n s env 
           existingColumns :: S.Set (String, String)
-          existingColumns = S.fromList $ concatMap (\(n, (SpreadSheet _ cs)) -> map (((n,) . fst)) cs) (M.assocs newEnv)
+          existingColumns = S.fromList $ concatMap (\(n, SpreadSheet _ cs) -> map ((n,) . fst) cs) (M.assocs newEnv)
 
+addSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Maybe SpreadSheetEnv
+addSpreadSheet (n, s) env@(SpreadSheetEnv envMap) 
+                | isValidSpreadSheet (n, s) env = Just (SpreadSheetEnv $ M.insert n s envMap)
+                | otherwise = Nothing
 
 -- | Evaluate a given formula on a given spreadsheet
 evalF :: Formula a -> SpreadSheet -> SpreadSheetEnv -> [a]

@@ -5,6 +5,7 @@ import Test.Tasty.HUnit
 import Data.Map
 import Data.SpreadSheet
 import Data.Column
+import Data.Maybe
 
 import Data.Formula
 import Data.Type
@@ -26,6 +27,10 @@ unitTests = testGroup "Unit tests"
      testIsValidCrossSpreadSheet
   , testCase "validating cross formula spreadsheet in env without referred columns"
      testInvalidCrossSpreadSheet
+  , testCase "adding incorrect spreadsheet fails"
+     testAddingincorrectSpreadSheet
+  , testCase "adding spreadsheet to correct env succeeds"
+     testAddingCorrectSpreadSheet
   ]
 
 
@@ -81,3 +86,9 @@ testInvalidCrossSpreadSheet = isValidSpreadSheet ("secondary", testCrossSpreadSh
                 , ("col3", CInt  $ CForm $ Prod (Var "col1" inferType) (Var "col1" inferType))
                 , ("col4", CBool $ CData [True, False, True, False, True])
                 ]
+
+testAddingincorrectSpreadSheet = isNothing (addSpreadSheet ("secondary", testCrossSpreadSheet) (SpreadSheetEnv M.empty)) @?= True
+
+testAddingCorrectSpreadSheet = isJust (addSpreadSheet ("secondary", testCrossSpreadSheet) env)  @?= True
+        where env = SpreadSheetEnv (M.fromList [("main", testSpreadSheet)])
+
