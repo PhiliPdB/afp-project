@@ -31,6 +31,10 @@ uniformLength cs =
         f is (CBool (CData d)) = length d : is
         f is  _ = is
 
+-- | Construct a SpreadSheet
+-- The function expects an associated list of column names paired with SpreadSheetCol
+-- The associated list must have unique keys, each SpreadSheetCol containing CData must have uniform length.
+-- Otherwise a Nothing is returned.
 spreadSheet :: [(String, SpreadSheetCol)] -> Maybe SpreadSheet
 spreadSheet [] = Just $ SpreadSheet 0 []
 spreadSheet cs@(c:_) 
@@ -119,6 +123,7 @@ evalF (Aggr t c1 t1 c2 t2 c3 t3 cond aggr) table env = fromMaybe (error "Somethi
                      CForm f -> return $ evalF f tab env
 
 evalF (Sum x) s env = map sum (evalF x s env)
+
 -- Time functions
 evalF (TimeAdd t d)   s env = zipWith timeAdd         (evalF t s env) (evalF d s env)
 evalF (TimeSub t d)   s env = zipWith timeAdd         (evalF t s env) (map invDur (evalF d s env))
@@ -140,7 +145,7 @@ data SpreadSheetColumnData = DInt      [Int]
                            | DDateTime [DateTime]
                            | DDuration [Duration]
                            | DPeriod   [Period]
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq)
 
 -- | Try to evaluate a `SpreadSheetCol` if it contains a formula.
 --   Otherwise, just the data is returned. 
