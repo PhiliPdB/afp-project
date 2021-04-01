@@ -9,7 +9,7 @@ import Data.Formula (Formula(..), colRefs)
 import Data.Map (Map)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
+import Data.Maybe (isJust, fromMaybe)
 import Data.Hourglass
 import Data.List (findIndices, nub)
 import Data.Type (Type)
@@ -43,7 +43,9 @@ spreadSheet cs@(c:_)
         names = map fst cs 
 
 -- | Collection of multiple spreadsheets
---   TODO: Might want to use newtype, to control how spreadsheets are added and deleted from the map
+--   TODO: Might want to add a function to remove spreadsheets.
+--         Check whether any removal invalidates the spreadsheet env
+--         for instance don't remove spreadsheets that are referred to.
 newtype SpreadSheetEnv = SpreadSheetEnv (Map String SpreadSheet)
 
 -- | Constructs a SpreadSheet environment from a Map of spreadsheet names and spreadsheets
@@ -72,8 +74,12 @@ isValidSpreadSheet (n, s) (SpreadSheetEnv env) = referredColumns s `S.isSubsetOf
           existingColumns :: S.Set (String, String)
           existingColumns = S.fromList $ concatMap (\(n, SpreadSheet _ cs) -> map ((n,) . fst) cs) (M.assocs newEnv)
 
+-- | Add a (name, SpreadSheet) pair to the spreadsheet environment.
+-- If the spreadsheet name already exists, or the spreadsheet refers to non-existing spreadsheets in
+-- its formula's, a Nothing is returned.
 addSpreadSheet :: (String, SpreadSheet) -> SpreadSheetEnv -> Maybe SpreadSheetEnv
 addSpreadSheet (n, s) env@(SpreadSheetEnv envMap) 
+                | isJust (M.lookup n envMap) = Nothing
                 | isValidSpreadSheet (n, s) env = Just (SpreadSheetEnv $ M.insert n s envMap)
                 | otherwise = Nothing
 

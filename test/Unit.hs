@@ -31,6 +31,9 @@ unitTests = testGroup "Unit tests"
      testAddingincorrectSpreadSheet
   , testCase "adding spreadsheet to correct env succeeds"
      testAddingCorrectSpreadSheet
+  , testCase "adding already existing spreadsheet fails"
+     testAddingAlreadyExistingSpreadSheet
+    
   ]
 
 
@@ -92,3 +95,5 @@ testAddingincorrectSpreadSheet = isNothing (addSpreadSheet ("secondary", testCro
 testAddingCorrectSpreadSheet = isJust (addSpreadSheet ("secondary", testCrossSpreadSheet) env)  @?= True
         where env = SpreadSheetEnv (M.fromList [("main", testSpreadSheet)])
 
+testAddingAlreadyExistingSpreadSheet = 
+    isNothing (addSpreadSheet ("secondary", testCrossSpreadSheet) testEnv)  @?= True
