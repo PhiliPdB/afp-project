@@ -50,7 +50,12 @@ data Formula a where
          -> (Formula [c] -> Formula d)               -- ^ Aggregation function to map the values to a single value
          -> Formula d
 
-    Sum :: Formula [Int] -> Formula Int
+    -- Aggregator functions
+    Filter  :: CT a => (a -> Bool) -> Formula [a] -> Formula [a]
+    Sum     :: Num a => Formula [a] -> Formula a
+    Average :: Formula [Double] -> Formula Double
+    Length  :: CT a => Formula [a] -> Formula Int
+
     -- Time functions
     TimeAdd    :: Time t => Formula t -> Formula Duration -> Formula t
     TimeSub    :: Time t => Formula t -> Formula Duration -> Formula t
@@ -60,8 +65,12 @@ data Formula a where
     GetWeekDay :: Formula Date -> Formula WeekDay
     GetYearDay :: Formula Date -> Formula Int
     MonthDays  :: Formula Int    -- ^ for information about leap years
-               -> Formula Month 
-               -> Formula Int 
+               -> Formula Month
+               -> Formula Int
+
+    ToInt   :: Formula Double -> Formula Int
+    ToFloat :: Formula Int    -> Formula Double
+
 
 -- | Given the name of the current column,
 -- Returns all references to other (table, column) within the formula
@@ -81,16 +90,15 @@ colRefs c (GEq x y)          = colRefs c x ++ colRefs c y
 colRefs c (LEq x y)          = colRefs c x ++ colRefs c y
 colRefs c (And x y)          = colRefs c x ++ colRefs c y
 colRefs c (Or x y)           = colRefs c x ++ colRefs c y
-colRefs c (Not x)            = colRefs c x 
+colRefs c (Not x)            = colRefs c x
 colRefs c (And x y)          = colRefs c x ++ colRefs c y
-colRefs c (IfThenElse x y z) = colRefs c x ++ colRefs c y ++ colRefs c z 
+colRefs c (IfThenElse x y z) = colRefs c x ++ colRefs c y ++ colRefs c z
 colRefs c (Sum x)            = colRefs c x
 colRefs c (TimeAdd x y)      = colRefs c x ++ colRefs c y
 colRefs c (AddPeriod x y)    = colRefs c x ++ colRefs c y
 colRefs c (SubPeriod x y)    = colRefs c x ++ colRefs c y
-colRefs c (IsLeapYear x )    = colRefs c x 
-colRefs c (GetWeekDay x)     = colRefs c x 
+colRefs c (IsLeapYear x )    = colRefs c x
+colRefs c (GetWeekDay x)     = colRefs c x
 colRefs c (GetYearDay x )    = colRefs c x
 colRefs c (MonthDays x y)    = colRefs c x ++ colRefs c y
 
--- f c (Aggr )
