@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs #-}
 module Data.Column where
 
+import Prelude as P
+
 import Data.Formula (Formula)
 import Data.Type (Type(..))
 import Data.Hourglass
@@ -61,6 +63,20 @@ getCol (CDuration c) TDuration = c
 getCol (CPeriod c)   TPeriod   = c
 getCol _           _       = error "Requested wrong type"
 
+
+length :: SpreadSheetCol -> Int -> Int
+length (CInt      (CData xs)) _ = P.length xs
+length (CFloat    (CData xs)) _ = P.length xs
+length (CBool     (CData xs)) _ = P.length xs
+length (CString   (CData xs)) _ = P.length xs
+length (CTime     (CData xs)) _ = P.length xs
+length (CWeekDay  (CData xs)) _ = P.length xs
+length (CMonth    (CData xs)) _ = P.length xs
+length (CDate     (CData xs)) _ = P.length xs
+length (CDateTime (CData xs)) _ = P.length xs
+length (CDuration (CData xs)) _ = P.length xs
+length (CPeriod   (CData xs)) _ = P.length xs
+length _                      n = n
 
 {-
 Functions for updating rows

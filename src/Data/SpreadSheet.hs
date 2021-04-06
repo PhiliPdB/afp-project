@@ -4,7 +4,8 @@ module Data.SpreadSheet where
 
 import Prelude hiding (LT, GT)
 
-import Data.Column (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
+import Data.Column as C (SpreadSheetCol(..), Column (..), getCol, ColField, tryAddField, removeRow)
+import qualified Data.Column as C
 import Data.Formula (Formula(..), colRefs)
 import Data.Map (Map)
 import qualified Data.Set as S
@@ -258,7 +259,7 @@ removeRow (SpreadSheet n cs) i
         | i < 0     = error "i >= 0"
         | otherwise = SpreadSheet (n - 1) (fmap (`removeRowFromColumn` i) cs)
     where removeRowFromColumn :: (String, SpreadSheetCol) -> Int -> (String, SpreadSheetCol)
-          removeRowFromColumn (s, c) i = (s, Data.Column.removeRow c i)
+          removeRowFromColumn (s, c) i = (s, C.removeRow c i)
 
 delFromAL :: Eq key => [(key, a)] -> key -> [(key, a)]
 delFromAL l key = filter (\a -> fst a /= key) l
@@ -275,7 +276,8 @@ insertAt (x:xs) y i
     | otherwise = error "i >= 0"
 
 tryAddColumn :: SpreadSheet -> Int -> (String, SpreadSheetCol) -> SpreadSheet
-tryAddColumn s@(SpreadSheet n cs) i c@(k, _)
-    | i >= 0    = if k `elem` map fst cs then s else SpreadSheet n (insertAt cs c i)
-    | otherwise = error "i >= 0"
+tryAddColumn s@(SpreadSheet n cs) i c@(k, col)
+    | n /= C.length col n = error "Column doesn't match size of the spreadsheet"
+    | i >= 0              = if k `elem` map fst cs then s else SpreadSheet n (insertAt cs c i)
+    | otherwise           = error "i >= 0"
 
