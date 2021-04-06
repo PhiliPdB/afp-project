@@ -18,9 +18,6 @@ toCSVString env = unlines               -- Intercalate each row with a newline c
                 . map (intercalate ",") -- Intercalate the data inside each row of the table with commas
                 . toStringTable env     -- Convert the spreadsheet to a string table
 
-newtype PlainString = PlainString String
-instance Show PlainString where
-  show (PlainString s) = s
 
 -- | Convert a spreadsheet into a simple table containing only strings
 toStringTable :: SpreadSheetEnv -> SpreadSheet -> [[String]]
@@ -30,7 +27,7 @@ toStringTable env = transpose . map (\(h, c) -> h : showCol c) . flip evalSpread
         showCol (DInt      xs) = map show xs
         showCol (DFloat    xs) = map show xs
         showCol (DBool     xs) = map show xs
-        showCol (DString   xs) = map (show . PlainString) xs
+        showCol (DString   xs) = xs
         showCol (DTime     xs) = map (timePrint "H:MI:S" . DateTime defaultDate) xs
         showCol (DWeekDay  xs) = map show xs
         showCol (DMonth    xs) = map show xs
