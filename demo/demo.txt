@@ -1,0 +1,33 @@
+Perform demo's in stack ghci?
+
+* Demonstrating types, basic spreadsheet operations & import + exportation
+
+    1. import csv file
+        - let in1 = importCSV "demo/products.csv" ',' True
+
+    2. add column, remove row,
+        - tryAddColumn in1 1 ("Origin", (CString (CData ["Africa", "India", "Brazil"])))
+
+    3. export csv file
+
+* Demonstration of Formula's
+
+    1. import csv file
+
+    2. Add two (simple single spreadsheet) formula's
+        - Addition
+        - Something else
+
+    3. export csv file
+
+* Demonstration of cross-spreadsheet formula's
+    1. import 1st csv file
+    
+    2. import 2nd csv file
+
+    3. Add cross table formula
+
+    4. export csv file
+
+* Demonstration of aggregation formula's
+    ...

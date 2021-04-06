@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3c880a18281852d61972be457d7132d10d77cfef250da0789591d87386cea862
+-- hash: b3e9a0416644482c828281895628f470b8c78535db048318e50f73e531f4b443
 
 name:           afp-project
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Data.SpreadSheet
       Data.Type
       DataTest
+      Demo
       Export
       ReadCSV
   other-modules:
