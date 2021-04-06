@@ -1,4 +1,4 @@
-Date,Product,Quantity,Price
-2021-04-06,Bananas,2,1.0
-2021-04-06,Apples,5,0.5
-2021-04-06,Oranges,4,2.0
+Date,Product,Quantity,Price,Rating
+2021-04-06,Bananas,2,1.0,5
+2021-04-06,Apples,5,0.5,4
+2021-04-06,Oranges,4,2.0,2
