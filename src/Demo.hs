@@ -51,6 +51,6 @@ aggrDemo =  do
     let aggrForm = Aggr "sold" "Product" (inferType :: Type String) "Product" inferType "Quantity" inferType Eq Sum
     let prod2 = tryAddColumn prod 1 ( "Products sold", CInt $ CForm aggrForm)
     let env = spreadSheetEnv $ M.fromList [("sold", sold), ("prod", prod2)]
-    writeCSVFile "demo/aggr_demo.csv" env prod2
+    writeCSVFile "demo/export_aggr_demo.csv" env prod2
     return ()
 
