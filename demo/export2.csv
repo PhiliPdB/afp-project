@@ -1,5 +1,0 @@
-Date,Origin,Product,Quantity,Revenue,Price,Rating,NeedsInvestigation
-06-04-2021,"\"Africa\"","\"Bananas\"",2,2.0,1.0,5,False
-06-04-2021,"\"India\"","\"Apples\"",5,2.5,0.5,4,False
-06-04-2021,"\"Brazil\"","\"Oranges\"",4,8.0,2.0,2,True
-08-04-2021,"\"Netherlands\"","\"Strawberries\"",5,6.0,1.2,4,False
