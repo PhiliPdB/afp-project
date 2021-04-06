@@ -63,8 +63,12 @@ getCol (CDuration c) TDuration = c
 getCol (CPeriod c)   TPeriod   = c
 getCol _           _       = error "Requested wrong type"
 
-
-length :: SpreadSheetCol -> Int -> Int
+-- | Get the length of a column.
+--   If the column does not contain any information about its length,
+--   a default value is used.
+length :: SpreadSheetCol -- ^ Spreadsheet column of which you want to know the length
+       -> Int            -- ^ Default value in case the spreadsheet column does not contain information about its length
+       -> Int            -- ^ The length of the column
 length (CInt      (CData xs)) _ = P.length xs
 length (CFloat    (CData xs)) _ = P.length xs
 length (CBool     (CData xs)) _ = P.length xs
