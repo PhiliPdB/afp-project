@@ -45,14 +45,14 @@ rowAddedLengthProperty :: SpreadSheet -> Property
 rowAddedLengthProperty s@(SpreadSheet n cs) = (nCols > 0) ==> forAll (row nCols) p
     where p :: Row -> Bool
           p (Row r) = let (SpreadSheet n' _) = tryAddRow s r in n' == n + 1
-          nCols = length cs
+          nCols = Data.List.length cs
 
 -- removing a row decreases row length variable
 rowRemovedLengthProperty :: SpreadSheet -> Int -> Property
 rowRemovedLengthProperty s@(SpreadSheet n cs) i = (nCols > 0 && n > 0 && i >= 0 && i < n) ==> p i
     where p :: Int -> Bool
           p i = let (SpreadSheet n' _) = Data.SpreadSheet.removeRow s i in n' == n - 1
-          nCols = length cs
+          nCols = Data.List.length cs
 
 columnInsertion :: Int -> Int -> Gen (SpreadSheetCol, Int)
 columnInsertion nRows nCols = do
@@ -62,11 +62,11 @@ columnInsertion nRows nCols = do
 
 -- adding a new column preserves uniqueness property
 uniqueColumnProperty :: SpreadSheet -> String -> Property
-uniqueColumnProperty s@(SpreadSheet n cs) k = forAll (columnInsertion n (length cs)) p
+uniqueColumnProperty s@(SpreadSheet n cs) k = forAll (columnInsertion n (Data.List.length cs)) p
     where p :: (SpreadSheetCol, Int) -> Bool
           p (c, i) = let (SpreadSheet _ cs') = tryAddColumn s i (k, c) in keys cs' == nub (keys cs')
           numKeys :: String -> [(String, SpreadSheetCol)] -> Int
-          numKeys k' cs' = length $ filter (==k') (keys cs')
+          numKeys k' cs' = Data.List.length $ filter (==k') (keys cs')
           keys :: [(String, SpreadSheetCol)] -> [String]
           keys = map fst
 
@@ -83,7 +83,7 @@ instance Arbitrary UniformInput where
     arbitrary = do
         columnNames <- listOf (arbitrary :: (Gen String))
         nRows <- abs <$> arbitrary :: (Gen Int)
-        columnData  <- vectorOf (length columnNames) (column nRows)
+        columnData  <- vectorOf (Data.List.length columnNames) (column nRows)
         return $ UI (zip columnNames columnData)
 
 -- A spreadsheet constructed has a row length variable matching its first column length
@@ -91,7 +91,7 @@ spreadSheetRowLengthProperty :: UniformInput -> Property
 spreadSheetRowLengthProperty (UI cs) =
     case spreadSheet cs of
         Just (SpreadSheet _n [])    -> property True
-        Just (SpreadSheet  n (c:_)) -> property $ length c == n
+        Just (SpreadSheet  n (c:_)) -> property $ Data.List.length c == n
         Nothing                     -> property Discard -- discard if incorrect input
 
 -- A spreadsheet constructed has only unique columnNames
