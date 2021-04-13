@@ -36,10 +36,10 @@ instance CT Double where
 instance CT Bool where
     inferType = TBool
 
-instance CT String where
+instance {-# OVERLAPPING #-} CT String where
     inferType = TString
 
-instance CT a => CT [a] where
+instance {-# OVERLAPPABLE #-} CT a => CT [a] where
     inferType = TArray inferType
 
 instance CT TimeOfDay where
