@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 module Data.SpreadSheet (SpreadSheetColumnData(..), SpreadSheetEnv(..), SpreadSheet(..), evalSpreadSheet,
                         spreadSheet, spreadSheetEnv, isValidSpreadSheet,
-                        addSpreadSheet, evalF, tryAddRow, Data.SpreadSheet.removeRow, tryAddColumn) where
+                        addSpreadSheet, evalF, tryAddRow, Data.SpreadSheet.removeRow, tryAddColumn, removeColumn) where
 
 import Prelude hiding (LT, GT)
 
@@ -23,17 +23,17 @@ data SpreadSheet = SpreadSheet Int [(String, SpreadSheetCol)]
     deriving Show
 
 uniformLength :: [SpreadSheetCol] -> Bool
-uniformLength cs =
+uniformLength cols =
     case lengthOfCols of
         [] -> True
         (c:cs) -> all (==c) cs
   where
         lengthOfCols :: [Int]
-        lengthOfCols = foldl f [] cs
+        lengthOfCols = foldl f [] cols
         f :: [Int] -> SpreadSheetCol -> [Int]
-        f is (CInt (CData d)) = length d : is
+        f is (CInt (CData d))    = length d : is
         f is (CString (CData d)) = length d : is
-        f is (CBool (CData d)) = length d : is
+        f is (CBool (CData d))   = length d : is
         f is  _ = is
 
 -- | Construct a SpreadSheet
@@ -272,7 +272,7 @@ removeColumn (SpreadSheet n cs) k = SpreadSheet n (delFromAL cs k)
 
 insertAt :: [a] -> a -> Int -> [a]
 insertAt xs y 0 = y:xs
-insertAt [] y i = [y]
+insertAt [] y _ = [y]
 insertAt (x:xs) y i
     | i >= 0    = x : insertAt xs y (i - 1)
     | otherwise = error "i >= 0"
