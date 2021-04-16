@@ -18,12 +18,12 @@ correctLn :: [[a]] -> Bool
 correctLn []     = True
 correctLn (x:xs) = all (\y -> length y == length x) xs
 
--- | Cheks if the raw data from the csv contains values.
+-- | Checks if the raw data from the csv contains values.
 --   Takes into account if the first row is are the column names
 --   via the second argument.
 emptyCSV :: [[a]] -> Bool -> Bool
 emptyCSV []  _    = True
-emptyCSV [x] True = True
+emptyCSV [_] True = True
 emptyCSV _   _    = False
 
 -- | Takes the raw data, the column naming information and replies
@@ -121,7 +121,7 @@ createSpSh rows False = Right $ SpreadSheet sheetSize finalData
             transRows = filter (not . all null) $ transpose rows
             n         = ["col" ++ show x | x <- [1..(length transRows)]]
             finalData = zip n $ map inferDataType transRows
-
+createSpSh _ True = Left $ ErrMsg "No data provided"
 
 -- | Takes the path to the file, the separator that is should look for, boolean information
 --   if it should take the first row as column names and replies with the spreadsheet wraped

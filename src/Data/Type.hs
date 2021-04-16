@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleInstances #-}
-module Data.Type where
+module Data.Type (ErrMsg(..), Type(..), CT(..)) where
 
 import Data.Hourglass
 
