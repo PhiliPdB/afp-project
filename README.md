@@ -1,4 +1,4 @@
-# Typed Spreadsheet
+# Typed Spreadsheets
 
 This is a project in Haskell for the Advanced Functional Programming course given in the Computing Science master at Utrecht University. Here, we created a library for typed spreadsheets. This library solves some problems one can encounter when using spreadsheets, such as running formulas on missing values or on values of the wrong type.
 
