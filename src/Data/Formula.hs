@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module Data.Formula where
+module Data.Formula (Formula(..), colRefs) where
 import Prelude hiding (LT, GT)
 
 import Data.Type (Type, CT)

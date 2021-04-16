@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
-module Data.Column where
+module Data.Column (Column(..), SpreadSheetCol(..), getCol, ColField(..),
+                     Data.Column.length, tryAddField, removeRow) where
 
 import Prelude as P
 

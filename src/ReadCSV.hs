@@ -4,7 +4,7 @@ module ReadCSV(
 ) where
 
 import Data.SpreadSheet
-import Data.Column (Column(CData), SpreadSheetCol(..))
+import Data.Column (Column(CData), SpreadSheetCol(..), ColField(..))
 import Data.Type
 import Data.List.Split (split, oneOf, dropDelims)
 import Data.List       (transpose,nub)

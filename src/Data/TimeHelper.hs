@@ -1,4 +1,4 @@
-module Data.TimeHelper where
+module Data.TimeHelper (showDuration, showPeriod, readPeriod, readDuration, invDur, invPer) where
     
 import Data.Hourglass
 import Data.Char  (digitToInt, isDigit)

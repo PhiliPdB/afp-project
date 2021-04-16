@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TupleSections #-}
-module Data.SpreadSheet where
+module Data.SpreadSheet (SpreadSheetColumnData(..), SpreadSheetEnv(..), SpreadSheet(..), evalSpreadSheet,
+                        spreadSheet, spreadSheetEnv, isValidSpreadSheet,
+                        addSpreadSheet, evalF, tryAddRow, Data.SpreadSheet.removeRow, tryAddColumn) where
 
 import Prelude hiding (LT, GT)
 
